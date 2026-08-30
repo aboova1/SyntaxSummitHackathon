@@ -35,6 +35,40 @@ const pitchers = ["P100", "P200", "P300", "P400"];
 const batters = ["B100", "B101", "B102", "B103", "B104", "B105"];
 const parks = ["Wrigley Field", "American Family Field", "Busch Stadium"];
 const teams = ["CHC", "MIL", "STL", "CIN"];
+const previousPitches = [
+  {
+    name: "four-seam fastball",
+    speed: 95,
+    breakX: -4,
+    breakZ: 15,
+    spin: 2350,
+    whiffEffect: 0.075,
+  },
+  {
+    name: "sinker",
+    speed: 94,
+    breakX: -10,
+    breakZ: 8,
+    spin: 2180,
+    whiffEffect: 0.045,
+  },
+  {
+    name: "curveball",
+    speed: 79,
+    breakX: 8,
+    breakZ: -6,
+    spin: 2650,
+    whiffEffect: 0,
+  },
+  {
+    name: "changeup",
+    speed: 84,
+    breakX: -11,
+    breakZ: 4,
+    spin: 1810,
+    whiffEffect: 0.03,
+  },
+] as const;
 
 const clamp = (value: number, low: number, high: number): number =>
   Math.max(low, Math.min(high, value));
@@ -154,8 +188,8 @@ for (const season of [2023, 2024, 2025]) {
     for (const batter of batters) {
       for (const batterSide of ["left", "right"] as const) {
         for (const count of counts) {
-          for (let repetition = 0; repetition < 5; repetition += 1) {
-            for (const condition of ["primary", "baseline"] as const) {
+          for (let repetition = 0; repetition < 3; repetition += 1) {
+            for (const previousPitch of previousPitches) {
               appearanceIndex += 1;
               const gameIndex = Math.floor((appearanceIndex - 1) / 12);
               const gameId = `G${season}-${String(gameIndex).padStart(4, "0")}`;
@@ -176,18 +210,17 @@ for (const season of [2023, 2024, 2025]) {
                 pitch_number: 1,
                 balls: 0,
                 strikes: 0,
-                pitch_name: "changeup",
+                pitch_name: "sweeper",
                 description: "called strike",
-                release_speed: fixed(random.around(83, 2)),
-                break_x: fixed(random.around(10, 2)),
-                break_z: fixed(random.around(5, 2)),
-                spin_rate: Math.round(random.around(1800, 180)),
+                release_speed: fixed(random.around(89, 2)),
+                break_x: fixed(random.around(3, 2)),
+                break_z: fixed(random.around(8, 2)),
+                spin_rate: Math.round(random.around(2450, 180)),
                 plate_x: fixed(random.around(0, 1.5)),
                 plate_z: fixed(random.around(2.5, 1.4)),
               };
-              const secondPitch =
-                condition === "primary" ? "four-seam fastball" : "curveball";
-              const secondSpeed = condition === "primary" ? 95 : 79;
+              const secondPitch = previousPitch.name;
+              const secondSpeed = previousPitch.speed;
               const second = {
                 ...base,
                 pitch_number: 2,
@@ -196,18 +229,12 @@ for (const season of [2023, 2024, 2025]) {
                 pitch_name: secondPitch,
                 description: "ball",
                 release_speed: fixed(random.around(secondSpeed, 2)),
-                break_x: fixed(
-                  random.around(condition === "primary" ? -4 : 8, 2),
-                ),
-                break_z: fixed(
-                  random.around(condition === "primary" ? 15 : -6, 2),
-                ),
-                spin_rate: Math.round(
-                  random.around(condition === "primary" ? 2350 : 2650, 180),
-                ),
+                break_x: fixed(random.around(previousPitch.breakX, 2)),
+                break_z: fixed(random.around(previousPitch.breakZ, 2)),
+                spin_rate: Math.round(random.around(previousPitch.spin, 180)),
                 plate_x: fixed(random.around(0, 1.8)),
                 plate_z: fixed(random.around(2.6, 1.5)),
-                previous_pitch_1: "changeup",
+                previous_pitch_1: "sweeper",
                 previous_result_1: "called strike",
                 previous_speed_1: first.release_speed,
               };
@@ -215,7 +242,7 @@ for (const season of [2023, 2024, 2025]) {
               const batterIndex = Number(batter.slice(1));
               const probability = clamp(
                 0.205 +
-                  (condition === "primary" ? 0.075 : 0) +
+                  previousPitch.whiffEffect +
                   pitcherIndex * 0.018 +
                   (batterIndex % 7) * 0.008 +
                   count[1] * 0.025 -
@@ -248,7 +275,7 @@ for (const season of [2023, 2024, 2025]) {
                     : null,
                 plate_appearance_result: paResult,
                 previous_pitch_1: secondPitch,
-                previous_pitch_2: "changeup",
+                previous_pitch_2: "sweeper",
                 previous_result_1: "ball",
                 previous_speed_1: second.release_speed,
                 speed_change_from_previous: fixed(

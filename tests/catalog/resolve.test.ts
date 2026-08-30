@@ -31,9 +31,9 @@ describe("catalog resolution", () => {
     expect(result.plan?.policy.initial_trials).toBe(10_000);
   });
 
-  it("uses catalog defaults when the use block is absent", () => {
+  it("uses catalog defaults when the resources block is absent", () => {
     const document = compileFrontEnd(
-      `data:\n  source: team pitches\n\nanalyze:\n  target:\n    pitch: slider\n    outcome: contact\n    horizon: this pitch\n  method: model\n`,
+      `source: team pitches\n\ntarget:\n  event: contact\n  pitch: slider\n\nevidence: model\n`,
     ).document;
     const catalog = parseCatalog(catalogSource).catalog;
     if (!document || !catalog) throw new Error("fixture did not compile");
@@ -41,12 +41,12 @@ describe("catalog resolution", () => {
     const result = resolveCatalog(document, catalog);
 
     expect(result.diagnostics).toEqual([]);
-    expect(result.plan?.model?.name).toBe("approved pitch outcome");
+    expect(result.plan?.model?.name).toBe("approved pitch event");
   });
 
   it("does not resolve unused model resources for observed work", () => {
     const document = compileFrontEnd(
-      `data:\n  source: team pitches\n\nanalyze:\n  target:\n    pitch: slider\n    outcome: contact\n    horizon: this pitch\n  method: observed\n`,
+      `source: team pitches\n\ntarget:\n  event: contact\n  pitch: slider\n\nevidence: observed\n`,
     ).document;
     const catalog = parseCatalog(catalogSource).catalog;
     if (!document || !catalog) throw new Error("fixture did not compile");

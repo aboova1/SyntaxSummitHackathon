@@ -30,7 +30,7 @@ const previousMatches = (
   constraint: FrozenPreviousConstraint | undefined,
 ): boolean => {
   if (!constraint) return true;
-  const window = completeHistory.slice(-constraint.window);
+  const window = completeHistory.slice(-constraint.lookback);
   if (constraint.kind === "exclude") {
     const excluded = constraint.pitchNames[0] ?? [];
     return window.every((record) => !pitchMatches(record, excluded));
@@ -39,7 +39,7 @@ const previousMatches = (
 };
 
 const outcomeMatches = (record: PitchRecord, plan: ExecutionPlan): boolean => {
-  if (plan.target.horizon === "plate appearance") {
+  if (plan.target.period === "plate appearance") {
     const result = text(record, "plate_appearance_result");
     const values: Readonly<Record<string, readonly string[]>> = {
       strikeout: ["strikeout", "strikeout double play"],
@@ -65,7 +65,7 @@ const outcomeMatches = (record: PitchRecord, plan: ExecutionPlan): boolean => {
         "field error",
       ],
     };
-    return (values[plan.target.outcome] ?? []).includes(result);
+    return (values[plan.target.event] ?? []).includes(result);
   }
   const description = text(record, "description");
   const values: Readonly<Record<string, readonly string[]>> = {
@@ -82,7 +82,7 @@ const outcomeMatches = (record: PitchRecord, plan: ExecutionPlan): boolean => {
     "called strike": ["called strike"],
     "ball in play": ["hit into play"],
   };
-  return (values[plan.target.outcome] ?? []).includes(description);
+  return (values[plan.target.event] ?? []).includes(description);
 };
 
 const recordInScope = (record: PitchRecord, plan: ExecutionPlan): boolean => {
@@ -115,6 +115,13 @@ const recordInScope = (record: PitchRecord, plan: ExecutionPlan): boolean => {
   )
     return false;
   if (
+    filters.batterSides?.length &&
+    !filters.batterSides.includes(
+      text(record, "batter_side") as "left" | "right" | "switch",
+    )
+  )
+    return false;
+  if (
     filters.teams?.length &&
     !filters.teams.includes(text(record, "pitching_team")) &&
     !filters.teams.includes(text(record, "batting_team"))
@@ -122,6 +129,14 @@ const recordInScope = (record: PitchRecord, plan: ExecutionPlan): boolean => {
     return false;
   }
   return true;
+};
+
+const targetInScope = (record: PitchRecord, plan: ExecutionPlan): boolean => {
+  const counts = plan.dataFilters.counts;
+  return (
+    !counts?.length ||
+    counts.includes(`${number(record, "balls")}-${number(record, "strikes")}`)
+  );
 };
 
 const sortRecords = (records: readonly PitchRecord[]): readonly PitchRecord[] =>
@@ -148,8 +163,9 @@ export const selectPitches = (
     const key = `${text(record, "game_id")}\u0000${text(record, "plate_appearance_id")}`;
     const history = histories.get(key) ?? [];
     const targetMatches =
-      plan.target.pitchNames.length === 0 ||
-      pitchMatches(record, plan.target.pitchNames);
+      targetInScope(record, plan) &&
+      (plan.target.pitchNames.length === 0 ||
+        pitchMatches(record, plan.target.pitchNames));
     if (targetMatches) {
       const primary = previousMatches(history, plan.primary);
       const baseline = plan.baseline

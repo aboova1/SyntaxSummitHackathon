@@ -20,6 +20,7 @@ export const readHttpData = async (
 ): Promise<DataReadResult> => {
   const operation = profile.operations.query;
   const path = operation?.path ?? "/v1/query";
+  const { counts: _targetCounts, ...historyFilters } = plan.dataFilters;
   const response = await requestJson<unknown>(
     profile,
     path,
@@ -28,7 +29,10 @@ export const readHttpData = async (
       body: {
         dataset: resource.object,
         contract: resource.contract,
-        filters: plan.dataFilters,
+        filters: historyFilters,
+        target_filters: {
+          counts: plan.dataFilters.counts ?? [],
+        },
         columns: [
           ...new Set([
             "game_id",
@@ -45,6 +49,8 @@ export const readHttpData = async (
             ...(plan.dataFilters.teams
               ? ["pitching_team", "batting_team"]
               : []),
+            ...(plan.dataFilters.counts ? ["balls", "strikes"] : []),
+            ...(plan.dataFilters.batterSides ? ["batter_side"] : []),
             ...plan.features.matchColumns,
             ...plan.features.featureColumns,
           ]),
@@ -71,6 +77,8 @@ export const readHttpData = async (
     "plate_appearance_result",
     ...(plan.dataFilters.dates ? ["game_date"] : []),
     ...(plan.dataFilters.teams ? ["pitching_team", "batting_team"] : []),
+    ...(plan.dataFilters.counts ? ["balls", "strikes"] : []),
+    ...(plan.dataFilters.batterSides ? ["batter_side"] : []),
   ];
   const requested = [
     ...new Set([

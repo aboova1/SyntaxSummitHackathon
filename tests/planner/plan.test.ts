@@ -29,7 +29,7 @@ describe("execution planning", () => {
       "predict",
       "simulate",
       "summary",
-      "report",
+      "include",
     ]);
   });
 
@@ -52,7 +52,7 @@ describe("execution planning", () => {
   });
 
   it("uses safe catalog facts when the study omits facts", () => {
-    const simple = `data:\n  source: team pitches\n\nanalyze:\n  target:\n    pitch: slider\n    outcome: contact\n    horizon: this pitch\n  versus:\n    previous:\n      exclude: fastball\n      window: 2 pitches\n  method: model\n`;
+    const simple = `source: team pitches\n\ntarget:\n  event: contact\n  pitch: slider\n\nsequence:\n  after: changeup\n  versus: without fastball\n  lookback: 2 pitches\n\nevidence: model\n`;
     const result = compileProject(simple, catalog);
 
     expect(result.diagnostics).toEqual([]);
@@ -83,7 +83,7 @@ describe("execution planning", () => {
     const filtered = study
       .replace(
         "games: regular season",
-        "games: regular season\n  dates: 2025-04-01 through 2025-04-30\n  teams: CHC, MIL",
+        "games: regular season\n  dates: 2025-04-01 through 2025-04-30\n  teams: CHC, MIL\n  counts: 1-2, 2-2\n  batter sides: left",
       )
       .replace("seasons: 2023 through 2025", "seasons: 2025");
     const result = compileProject(filtered, catalog);
@@ -91,16 +91,23 @@ describe("execution planning", () => {
     expect(result.diagnostics).toEqual([]);
     expect(result.sql?.text).toContain("game_date >= ? AND game_date <= ?");
     expect(result.sql?.text).toContain("pitching_team IN (?, ?)");
+    expect(result.sql?.text).toContain("balls = ? AND strikes = ?");
+    expect(result.sql?.text).toContain("batter_side IN (?)");
     expect(result.sql?.parameters).toEqual(
-      expect.arrayContaining(["2025-04-01", "2025-04-30", "CHC", "MIL"]),
+      expect.arrayContaining([
+        "2025-04-01",
+        "2025-04-30",
+        "CHC",
+        "MIL",
+        1,
+        2,
+        "left",
+      ]),
     );
   });
 
   it("changes the fingerprint when the question changes", () => {
-    const changed = study.replace(
-      "outcome: swing and miss",
-      "outcome: contact",
-    );
+    const changed = study.replace("event: swing and miss", "event: contact");
 
     expect(compileProject(study, catalog).plan?.fingerprint).not.toBe(
       compileProject(changed, catalog).plan?.fingerprint,

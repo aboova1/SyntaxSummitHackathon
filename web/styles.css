@@ -1305,6 +1305,9 @@ td {
   border-radius: var(--radius-lg);
   padding: 0.8rem;
 }
+.matchup-filters {
+  margin-top: 0.9rem;
+}
 .pitcher-card {
   border-top: 3px solid var(--brand);
   background: linear-gradient(160deg, var(--brand-soft), var(--card) 62%);
@@ -1407,6 +1410,21 @@ td {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--brand), var(--violet));
 }
+.pitch-mix-row:nth-of-type(2) .pitch-mix-fill {
+  background: linear-gradient(90deg, var(--teal), var(--brand));
+}
+.pitch-mix-row:nth-of-type(3) .pitch-mix-fill {
+  background: linear-gradient(90deg, var(--orange), var(--critical));
+}
+.pitch-mix-row:nth-of-type(4) .pitch-mix-fill {
+  background: linear-gradient(90deg, var(--violet), var(--orange));
+}
+.pitch-mix-row:nth-of-type(5) .pitch-mix-fill {
+  background: linear-gradient(90deg, var(--critical), var(--violet));
+}
+.pitch-mix-row:nth-of-type(6) .pitch-mix-fill {
+  background: linear-gradient(90deg, var(--brand), var(--teal));
+}
 .profile-foot {
   display: grid;
   gap: 0.34rem;
@@ -1469,6 +1487,12 @@ td {
 .playground-result {
   min-height: 9.5rem;
   padding: 1rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--brand-soft) 55%, var(--card)) 0%,
+    var(--card) 48%,
+    color-mix(in oklch, var(--orange-soft) 45%, var(--card)) 100%
+  );
 }
 .playground-empty {
   display: flex;

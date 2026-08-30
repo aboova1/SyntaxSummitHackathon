@@ -30,9 +30,9 @@ describe("local runtime", () => {
     });
 
     expect(executed.diagnostics).toEqual([]);
-    expect(executed.result?.primary.matchedCount).toBe(4_320);
-    expect(executed.result?.baseline?.matchedCount).toBe(4_320);
-    expect(executed.result?.primary.observedRate).toBeCloseTo(0.353472, 6);
+    expect(executed.result?.primary.matchedCount).toBe(5_184);
+    expect(executed.result?.baseline?.matchedCount).toBe(5_184);
+    expect(executed.result?.primary.observedRate).toBeCloseTo(0.332176, 6);
     expect(executed.result?.audit.trials).toBe(40_000);
     expect(executed.result?.difference?.simulated).toBeGreaterThan(0.08);
     expect(executed.result?.examples).toHaveLength(5);
@@ -51,6 +51,29 @@ describe("local runtime", () => {
     );
   });
 
+  it("runs every playground prior-pitch choice", async () => {
+    for (const pitch of [
+      "four-seam fastball",
+      "sinker",
+      "curveball",
+      "changeup",
+    ]) {
+      const source = study
+        .replace("after: fastball", `after: ${pitch}`)
+        .replace("without fastball", `without ${pitch}`)
+        .replace("evidence: simulation", "evidence: observed");
+      const compiled = compileProject(source, catalog);
+      if (!compiled.plan) throw new Error(JSON.stringify(compiled.diagnostics));
+      const executed = await executePlan(compiled.plan, {
+        catalogDirectory: "examples",
+      });
+
+      expect(executed.diagnostics, pitch).toEqual([]);
+      expect(executed.result?.primary.matchedCount, pitch).toBeGreaterThan(0);
+      expect(executed.result?.baseline?.matchedCount, pitch).toBeGreaterThan(0);
+    }
+  }, 15_000);
+
   it("produces the same result for the same frozen inputs", async () => {
     const plan = demoPlan();
     const first = await executePlan(plan, { catalogDirectory: "examples" });
@@ -62,7 +85,7 @@ describe("local runtime", () => {
     expect(first.result?.protectedAudit.seeds).toEqual(
       second.result?.protectedAudit.seeds,
     );
-  });
+  }, 15_000);
 
   it("keeps protected seeds out of normal output", async () => {
     const executed = await executePlan(demoPlan(), {
@@ -103,6 +126,55 @@ describe("local runtime", () => {
     expect(
       selectPitches(records, plan).filter((row) => row.group === "primary"),
     ).toHaveLength(0);
+  });
+
+  it("filters game-plan records by count and batter side", () => {
+    const plan = {
+      ...demoPlan(),
+      dataFilters: {
+        seasons: [2024],
+        games: "regular season",
+        counts: ["0-2"],
+        batterSides: ["left" as const],
+      },
+    };
+    const records: PitchRecord[] = [];
+    for (const [appearance, side, balls, strikes] of [
+      ["PA1", "left", 0, 2],
+      ["PA2", "right", 0, 2],
+      ["PA3", "left", 1, 1],
+    ] as const) {
+      records.push(
+        {
+          game_id: "G1",
+          plate_appearance_id: appearance,
+          pitch_number: 1,
+          season: 2024,
+          game_type: "regular season",
+          batter_side: side,
+          balls: 0,
+          strikes: 0,
+          pitch_name: "four-seam fastball",
+          description: "ball",
+        },
+        {
+          game_id: "G1",
+          plate_appearance_id: appearance,
+          pitch_number: 2,
+          season: 2024,
+          game_type: "regular season",
+          batter_side: side,
+          balls,
+          strikes,
+          pitch_name: "slider",
+          description: "swinging strike",
+        },
+      );
+    }
+
+    expect(
+      selectPitches(records, plan).filter((row) => row.group === "primary"),
+    ).toHaveLength(1);
   });
 
   it("balances exact strata with weights", () => {

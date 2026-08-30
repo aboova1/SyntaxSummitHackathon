@@ -364,9 +364,9 @@ const showEvidence = (result) => {
     '</code></div><h2 class="result-title">' +
     escapeHtml(result.study) +
     '</h2><p class="target-line">Target: ' +
-    escapeHtml(result.target.outcome + targetPitch) +
+    escapeHtml(result.target.event + targetPitch) +
     " · " +
-    escapeHtml(result.target.horizon) +
+    escapeHtml(result.target.period) +
     '</p><div class="lead-metric"><div><span>' +
     leadLabel +
     "</span><strong>" +
@@ -529,6 +529,8 @@ element("#new-study").addEventListener("click", () => {
 
 const playgroundPitcher = element("#playground-pitcher");
 const playgroundBatter = element("#playground-batter");
+const playgroundCounts = element("#playground-counts");
+const playgroundSide = element("#playground-side");
 const playgroundOutcome = element("#playground-outcome");
 const playgroundPrevious = element("#playground-previous");
 const playgroundWindow = element("#playground-window");
@@ -651,6 +653,16 @@ const loadPlaygroundProfiles = async () => {
           "</option>",
       )
       .join("");
+    playgroundPrevious.innerHTML = playgroundData.previousPitches
+      .map(
+        (pitch) =>
+          '<option value="' +
+          escapeHtml(pitch) +
+          '">' +
+          escapeHtml(titleCase(pitch)) +
+          "</option>",
+      )
+      .join("");
     playgroundPitcher.disabled = false;
     playgroundBatter.disabled = false;
     playgroundPitcher.value = playgroundData.pitchers[0]?.id ?? "P100";
@@ -681,13 +693,16 @@ const buildPlaygroundSource = () => {
   const pitcherName = pitcher?.name ?? playgroundPitcher.value ?? "P100";
   const batterName = batter?.name ?? playgroundBatter.value ?? "B100";
   const method = playgroundMethod.value;
-  const uses = [
-    ...(method === "model" || method === "simulation"
-      ? ["  model: approved demo outcome"]
-      : []),
-    "  comparison: matched comparison",
-    ...(method === "simulation" ? ["  simulation: adaptive simulation"] : []),
+  const scopeLines = [
+    "  seasons: 2023 through 2025",
+    "  games: regular season",
+    "  pitchers: " + (playgroundPitcher.value || "P100"),
+    "  batters: " + (playgroundBatter.value || "B100"),
   ];
+  if (playgroundCounts.value)
+    scopeLines.push("  counts: " + playgroundCounts.value);
+  if (playgroundSide.value)
+    scopeLines.push("  batter sides: " + playgroundSide.value);
   return [
     "study: " +
       pitcherName +
@@ -698,36 +713,29 @@ const buildPlaygroundSource = () => {
       " before slider for " +
       outcome,
     "",
-    "data:",
-    "  source: synthetic demo pitches",
-    "  seasons: 2023 through 2025",
-    "  games: regular season",
-    "  pitchers: " + (playgroundPitcher.value || "P100"),
-    "  batters: " + (playgroundBatter.value || "B100"),
+    "source: synthetic demo pitches",
     "",
-    "use:",
-    ...uses,
+    "scope:",
+    ...scopeLines,
     "",
-    "analyze:",
-    "  target:",
-    "    pitch: slider",
-    "    outcome: " + outcome,
-    "    horizon: this pitch",
-    "  when:",
-    "    previous:",
-    "      sequence: " + previous,
-    "      window: " + window + " " + pitchWord,
-    "  versus:",
-    "    previous:",
-    "      exclude: " + previous,
-    "      window: " + window + " " + pitchWord,
-    "  facts:",
-    "    match: pitcher, count, batter side, season",
-    "    account for: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense",
-    "  method: " + method,
-    "  report:",
-    "    - zone map",
-    "    - 5 examples",
+    "target:",
+    "  event: " + outcome,
+    "  pitch: slider",
+    "",
+    "sequence:",
+    "  after: " + previous,
+    "  versus: without " + previous,
+    "  lookback: " + window + " " + pitchWord,
+    "",
+    "facts:",
+    "  match: pitcher, count, batter side, season",
+    "  consider: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense",
+    "",
+    "evidence: " + method,
+    "",
+    "include:",
+    "  - zone map",
+    "  - 5 examples",
     "",
   ].join("\n");
 };
@@ -849,8 +857,10 @@ playgroundResult.addEventListener("click", (event) => {
 element("#playground-reset").addEventListener("click", () => {
   playgroundPitcher.value = playgroundData?.pitchers[0]?.id ?? "P100";
   playgroundBatter.value = playgroundData?.batters[0]?.id ?? "B100";
+  playgroundCounts.value = "";
+  playgroundSide.value = "";
   playgroundOutcome.value = "swing and miss";
-  playgroundPrevious.value = "fastball";
+  playgroundPrevious.value = "four-seam fastball";
   playgroundWindow.value = "2";
   playgroundMethod.value = "simulation";
   updatePlayground();

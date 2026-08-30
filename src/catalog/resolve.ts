@@ -39,9 +39,15 @@ const getNamed = <T>(
   diagnostics: Diagnostic[],
 ): { readonly name: string; readonly resource: T } | undefined => {
   if (!selected) {
+    const key: Readonly<Record<string, string>> = {
+      data: "source",
+      model: "resources.model",
+      comparison: "resources.matching",
+      simulation: "resources.simulator",
+    };
     diagnostics.push(
       error("resolve", "S310", `No ${kind} resource is selected.`, {
-        hint: `Add 'use.${kind}' or configure a catalog default.`,
+        hint: `Add '${key[kind] ?? kind}' or configure a catalog default.`,
       }),
     );
     return undefined;
@@ -64,22 +70,16 @@ export const resolveCatalog = (
   priorDiagnostics: readonly Diagnostic[] = [],
 ): ResolveResult => {
   const diagnostics = [...priorDiagnostics];
-  const data = getNamed(
-    "data",
-    document.data.source,
-    catalog.data,
-    diagnostics,
-  );
-  const selected = document.use;
+  const data = getNamed("data", document.source, catalog.data, diagnostics);
+  const selected = document.resources;
   const modelName = selected?.model ?? catalog.defaults.model;
-  const comparisonName = selected?.comparison ?? catalog.defaults.comparison;
-  const simulationName = selected?.simulation ?? catalog.defaults.simulation;
+  const comparisonName = selected?.matching ?? catalog.defaults.comparison;
+  const simulationName = selected?.simulator ?? catalog.defaults.simulation;
 
   const needsModel =
-    document.analyze.method === "model" ||
-    document.analyze.method === "simulation";
-  const needsComparison = document.analyze.versus !== undefined;
-  const needsSimulation = document.analyze.method === "simulation";
+    document.evidence === "model" || document.evidence === "simulation";
+  const needsComparison = document.sequence?.versus !== undefined;
+  const needsSimulation = document.evidence === "simulation";
 
   const model = needsModel
     ? getNamed("model", modelName, catalog.models, diagnostics)
@@ -96,33 +96,33 @@ export const resolveCatalog = (
       warning(
         "resolve",
         "S312",
-        `Model '${selected.model}' is not used by method 'observed'.`,
+        `Model '${selected.model}' is not used by evidence 'observed'.`,
         {
-          hint: "Remove 'use.model' to keep the study minimal.",
+          hint: "Remove 'resources.model' to keep the study minimal.",
         },
       ),
     );
   }
-  if (!needsComparison && selected?.comparison) {
+  if (!needsComparison && selected?.matching) {
     diagnostics.push(
       warning(
         "resolve",
         "S313",
-        `Comparison '${selected.comparison}' is not used without 'versus'.`,
+        `Matching resource '${selected.matching}' is not used without a baseline.`,
         {
-          hint: "Remove 'use.comparison' or add a baseline.",
+          hint: "Remove 'resources.matching' or add 'sequence.versus'.",
         },
       ),
     );
   }
-  if (!needsSimulation && selected?.simulation) {
+  if (!needsSimulation && selected?.simulator) {
     diagnostics.push(
       warning(
         "resolve",
         "S314",
-        `Simulation '${selected.simulation}' is not used by this method.`,
+        `Simulator '${selected.simulator}' is not used by this evidence type.`,
         {
-          hint: "Remove 'use.simulation' or use 'method: simulation'.",
+          hint: "Remove 'resources.simulator' or use 'evidence: simulation'.",
         },
       ),
     );

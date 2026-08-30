@@ -77,7 +77,7 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
         }
         const catalog = loaded.catalog;
         sendJson(response, 200, {
-          language: { name: "SeamScript", version: "0.2" },
+          language: { name: "SeamScript", version: "0.3" },
           catalog: { name: catalog.catalog, version: catalog.version },
           data: Object.entries(catalog.data).map(([name, item]) => ({
             name,

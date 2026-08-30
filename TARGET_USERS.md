@@ -24,6 +24,32 @@ Which two or three sequence plans should enter the next game plan?
 
 The user creates a trusted answer in minutes, without a new analyst request.
 
+### Language pattern
+
+The coordinator starts with the decision scope.
+
+```seam
+source: team pitches
+
+scope:
+  pitchers: P100
+  counts: 1-2, 2-2
+  batter sides: left
+
+target:
+  event: swing and miss
+  pitch: slider
+
+sequence:
+  after: fastball
+  versus: without fastball
+  lookback: 2 pitches
+
+evidence: simulation
+```
+
+Team defaults supply the model, matching method, simulator, and safety limits.
+
 ## 2. Catching coordinator or catcher scout
 
 This user reviews the quality of pitch-selection decisions.

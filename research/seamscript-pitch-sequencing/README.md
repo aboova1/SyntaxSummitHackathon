@@ -6,4 +6,6 @@ It replaces the earlier generated report.
 
 The earlier report used the obsolete seven-block grammar.
 
-The current language uses `study`, `data`, `use`, and `analyze`.
+The current language uses one fixed order.
+
+It uses `source`, `target`, `sequence`, `facts`, `evidence`, and `include`.

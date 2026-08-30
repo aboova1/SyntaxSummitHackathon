@@ -33,11 +33,21 @@ const nearest = (
   allowed: readonly string[],
 ): string | undefined => {
   const preferred: Readonly<Record<string, string>> = {
-    result: "outcome",
-    estimate: "analyze",
-    compare: "versus",
-    show: "report",
-    factors: "account for",
+    data: "source",
+    use: "resources",
+    analyze: "target",
+    outcome: "event",
+    result: "event",
+    horizon: "period",
+    when: "sequence",
+    method: "evidence",
+    report: "include",
+    show: "include",
+    "account for": "consider",
+    factors: "consider",
+    comparison: "matching",
+    simulation: "simulator",
+    window: "lookback",
   };
   const preferredValue = preferred[value];
   if (preferredValue && allowed.includes(preferredValue)) return preferredValue;

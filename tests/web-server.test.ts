@@ -61,7 +61,7 @@ describe("browser server", () => {
     const serialized = JSON.stringify(await response.json());
 
     expect(response.status).toBe(200);
-    expect(serialized).toContain("approved demo outcome");
+    expect(serialized).toContain("approved demo event");
     expect(serialized).toContain("matched comparison");
     expect(serialized).not.toContain("seed");
     expect(serialized).not.toContain("object");
@@ -74,11 +74,18 @@ describe("browser server", () => {
     const body = (await response.json()) as {
       pitchers: readonly unknown[];
       batters: readonly unknown[];
+      previousPitches: readonly string[];
     };
 
     expect(response.status).toBe(200);
     expect(body.pitchers).toHaveLength(4);
     expect(body.batters).toHaveLength(6);
+    expect(body.previousPitches).toEqual([
+      "four-seam fastball",
+      "sinker",
+      "curveball",
+      "changeup",
+    ]);
     expect(JSON.stringify(body)).not.toContain("seed");
   });
 

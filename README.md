@@ -10,65 +10,64 @@ The first release studies pitch sequences.
 
 ## The language
 
-A study has four top-level keys.
+A study follows the same order as a pregame question.
 
-- `study` gives an optional name.
-- `data` selects facts.
-- `use` selects approved tools.
-- `analyze` defines one question.
+`source` selects approved data.
 
-The `analyze` block keeps the target separate from the input facts.
+`target` states what to estimate.
+
+`sequence` states the setup and baseline.
+
+`facts` states known inputs.
+
+`evidence` selects the result type.
 
 ```seam
 study: Fastball before slider
 
-data:
-  source: synthetic demo pitches
+source: synthetic demo pitches
+
+scope:
   seasons: 2023 through 2025
   games: regular season
 
-use:
-  model: approved demo outcome
-  comparison: matched comparison
-  simulation: adaptive simulation
+target:
+  event: swing and miss
+  pitch: slider
 
-analyze:
-  target:
-    pitch: slider
-    outcome: swing and miss
-    horizon: this pitch
-  when:
-    previous:
-      sequence: fastball
-      window: 2 pitches
-  versus:
-    previous:
-      exclude: fastball
-      window: 2 pitches
-  facts:
-    match: pitcher, count, batter side, season
-    account for: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense
-  method: simulation
-  report:
-    - zone map
-    - 5 examples
+sequence:
+  after: fastball
+  versus: without fastball
+  lookback: 2 pitches
+
+facts:
+  match: pitcher, count, batter side, season
+  consider: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense
+
+evidence: simulation
+
+include:
+  - zone map
+  - 5 examples
 ```
 
 The syntax uses one formula:
 
 ```text
-data -> target -> conditions -> facts -> method -> evidence
+source -> target -> sequence -> facts -> evidence -> include
 ```
 
 `target` is the event to estimate.
 
 `facts` contains information available before that event.
 
-`when` selects the primary records.
+One `lookback` applies to the primary setup and baseline.
 
-`versus` selects an optional baseline.
+`include` adds views. Core evidence and audit data are automatic.
 
-`report` adds views. Core evidence and audit data are automatic.
+The catalog supplies approved tools by default.
+
+An optional `resources` block selects a different approved remote tool.
 
 ## Run the project
 
@@ -85,11 +84,13 @@ Open `http://127.0.0.1:4173` after the last command.
 
 The studio includes a guided playground, code editor, language guide, resource catalog, and local run history.
 
-The playground shows synthetic pitcher and batter profiles. Each choice filters the generated study and its result.
+The playground shows four pitchers, six batters, and full player profiles.
+
+It also supports four prior pitches, count groups, and batter-side filters.
 
 It saves drafts in the browser. It also supports light, dark, desktop, and mobile layouts.
 
-The demonstration uses 25,920 synthetic pitch records.
+The demonstration uses 31,104 synthetic pitch records.
 
 Do not use its result as baseball evidence.
 

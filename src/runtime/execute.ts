@@ -188,7 +188,7 @@ export const executePlan = async (
     let modelDescription: ModelDescription | undefined;
     let primaryPredictions: readonly number[] | undefined;
     let baselinePredictions: readonly number[] | undefined;
-    if (plan.method === "model" || plan.method === "simulation") {
+    if (plan.evidence === "model" || plan.evidence === "simulation") {
       if (
         plan.resources.model?.resource.serving.connector !==
           "builtin logistic" &&
@@ -251,7 +251,7 @@ export const executePlan = async (
           readonly trials: number;
         }
       | undefined;
-    if (plan.method === "simulation" && primaryPredictions) {
+    if (plan.evidence === "simulation" && primaryPredictions) {
       if (
         plan.resources.simulation?.resource.connector === "openapi" &&
         !options.simulation
@@ -317,9 +317,9 @@ export const executePlan = async (
         )
       : undefined;
     const examplesCount =
-      plan.report.find((item) => item.kind === "examples")?.kind === "examples"
+      plan.include.find((item) => item.kind === "examples")?.kind === "examples"
         ? (
-            plan.report.find((item) => item.kind === "examples") as {
+            plan.include.find((item) => item.kind === "examples") as {
               readonly count: number;
             }
           ).count
@@ -333,7 +333,7 @@ export const executePlan = async (
           modelDescription?.featureColumns.includes(field),
         )
       : [];
-    const reportKinds = new Set(plan.report.map((item) => item.kind));
+    const reportKinds = new Set(plan.include.map((item) => item.kind));
     const breakdowns = {
       ...(reportKinds.has("pitcher breakdown")
         ? { pitcher: buildBreakdown(primary, "pitcher_id") }
@@ -352,9 +352,9 @@ export const executePlan = async (
         status: "complete",
         study: plan.study,
         evidence:
-          plan.method === "simulation"
+          plan.evidence === "simulation"
             ? "simulated chance"
-            : plan.method === "model"
+            : plan.evidence === "model"
               ? "model chance"
               : "observed rate",
         target: plan.target,

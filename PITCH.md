@@ -8,15 +8,17 @@ Most coaches still need an analyst to use them.
 
 SeamScript removes that access gap.
 
-A pregame coordinator writes four short blocks: `data`, `use`, `analyze`, and an optional `study` name.
+A pregame coordinator writes the question in normal study order.
 
-Inside `analyze`, `target` states what to estimate.
+`source` selects approved data.
+
+`target` states what to estimate.
 
 `facts` states what the model can use.
 
-`when` selects the primary sequence.
+`sequence.after` selects the primary setup.
 
-`versus` selects the baseline.
+`sequence.versus` selects the baseline.
 
 This structure prevents a target from looking like an input fact.
 
@@ -30,7 +32,7 @@ The plan can use a team warehouse and approved remote models.
 
 The system never trains an untested model by default.
 
-`method: simulation` runs automatic trials for the target event.
+`evidence: simulation` runs automatic trials for the target event.
 
 The runtime stops when Monte Carlo error reaches its approved limit.
 

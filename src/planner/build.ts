@@ -44,15 +44,13 @@ const freezePrevious = (
   type: "primary" | "baseline",
 ): FrozenPreviousConstraint | undefined => {
   const source =
-    type === "primary" ? document.analyze.when : document.analyze.versus;
+    type === "primary" ? document.sequence?.after : document.sequence?.versus;
   if (!source) return undefined;
   return {
-    kind: source.previous.kind,
-    pitchNames: source.previous.pitches.map((pitch) =>
-      expandPitch(pitch, resources),
-    ),
-    sourcePitches: source.previous.pitches,
-    window: source.previous.window,
+    kind: source.kind,
+    pitchNames: source.pitches.map((pitch) => expandPitch(pitch, resources)),
+    sourcePitches: source.pitches,
+    lookback: source.lookback,
   };
 };
 
@@ -84,7 +82,7 @@ const buildNodes = (document: SeamDocument): readonly PlanNode[] => {
     },
   ];
   let comparisonInput = "primary";
-  if (document.analyze.versus) {
+  if (document.sequence?.versus) {
     nodes.push({
       id: "baseline",
       kind: "select baseline",
@@ -100,19 +98,16 @@ const buildNodes = (document: SeamDocument): readonly PlanNode[] => {
     comparisonInput = "match";
   }
   let resultInput = comparisonInput;
-  if (
-    document.analyze.method === "model" ||
-    document.analyze.method === "simulation"
-  ) {
+  if (document.evidence === "model" || document.evidence === "simulation") {
     nodes.push({
       id: "predict",
-      kind: "predict outcome",
+      kind: "predict event",
       dependsOn: [comparisonInput],
       description: "Request target chances from the approved model.",
     });
     resultInput = "predict";
   }
-  if (document.analyze.method === "simulation") {
+  if (document.evidence === "simulation") {
     nodes.push({
       id: "simulate",
       kind: "simulate outcome",
@@ -129,8 +124,8 @@ const buildNodes = (document: SeamDocument): readonly PlanNode[] => {
       "Calculate rates, differences, and separate uncertainty values.",
   });
   nodes.push({
-    id: "report",
-    kind: "build report",
+    id: "include",
+    kind: "build included views",
     dependsOn: ["summary"],
     description: "Build required evidence and requested additions.",
   });
@@ -143,18 +138,17 @@ export const buildExecutionPlan = (
   priorDiagnostics: readonly Diagnostic[] = [],
 ): PlanResult => {
   const diagnostics = [...priorDiagnostics];
-  const factSource: FeaturePlan["source"] = document.analyze.facts
+  const factSource: FeaturePlan["source"] = document.facts
     ? "study"
     : "catalog policy";
-  const match = document.analyze.facts?.match ?? resources.policy.default_match;
+  const match = document.facts?.match ?? resources.policy.default_match;
   const featureGroups =
-    document.analyze.facts?.accountFor ??
-    resources.policy.default_feature_groups;
+    document.facts?.consider ?? resources.policy.default_feature_groups;
   const featureFields = fieldsForFeatureGroups(featureGroups);
   const matchColumns = columnsForMatchFields(match);
   const featureColumns = [...new Set(featureFields.map((field) => field.name))];
 
-  if (document.analyze.versus && match.length === 0) {
+  if (document.sequence?.versus && match.length === 0) {
     diagnostics.push(
       error(
         "plan",
@@ -166,14 +160,14 @@ export const buildExecutionPlan = (
       ),
     );
   }
-  if (document.analyze.method !== "observed" && featureGroups.length === 0) {
+  if (document.evidence !== "observed" && featureGroups.length === 0) {
     diagnostics.push(
       error(
         "plan",
         "S401",
         "A predictive method needs at least one feature group.",
         {
-          hint: "Add 'facts.account for' or configure catalog defaults.",
+          hint: "Add 'facts.consider' or configure catalog defaults.",
         },
       ),
     );
@@ -192,21 +186,21 @@ export const buildExecutionPlan = (
   }
   if (hasErrors(diagnostics)) return { diagnostics };
 
-  const targetPitch = document.analyze.target.pitch ?? null;
+  const targetPitch = document.target.pitch ?? null;
   const planWithoutFingerprint = {
     version: 1 as const,
     study: document.study ?? "Untitled study",
-    method: document.analyze.method,
+    evidence: document.evidence,
     target: {
       pitchNames: targetPitch ? expandPitch(targetPitch, resources) : [],
       sourcePitch: targetPitch,
-      outcome: document.analyze.target.outcome,
-      horizon: document.analyze.target.horizon,
+      event: document.target.event,
+      period: document.target.period,
     },
-    ...(document.analyze.when
+    ...(document.sequence
       ? { primary: freezePrevious(document, resources, "primary")! }
       : {}),
-    ...(document.analyze.versus
+    ...(document.sequence?.versus
       ? { baseline: freezePrevious(document, resources, "baseline")! }
       : {}),
     features: {
@@ -217,14 +211,20 @@ export const buildExecutionPlan = (
       source: factSource,
     },
     dataFilters: {
-      ...(document.data.seasons ? { seasons: document.data.seasons } : {}),
-      ...(document.data.dates ? { dates: document.data.dates } : {}),
-      ...(document.data.games ? { games: document.data.games } : {}),
-      ...(document.data.teams ? { teams: document.data.teams } : {}),
-      ...(document.data.pitchers ? { pitchers: document.data.pitchers } : {}),
-      ...(document.data.batters ? { batters: document.data.batters } : {}),
+      ...(document.scope?.seasons ? { seasons: document.scope.seasons } : {}),
+      ...(document.scope?.dates ? { dates: document.scope.dates } : {}),
+      ...(document.scope?.games ? { games: document.scope.games } : {}),
+      ...(document.scope?.teams ? { teams: document.scope.teams } : {}),
+      ...(document.scope?.pitchers
+        ? { pitchers: document.scope.pitchers }
+        : {}),
+      ...(document.scope?.batters ? { batters: document.scope.batters } : {}),
+      ...(document.scope?.counts ? { counts: document.scope.counts } : {}),
+      ...(document.scope?.batterSides
+        ? { batterSides: document.scope.batterSides }
+        : {}),
     },
-    report: document.analyze.report,
+    include: document.include,
     resources,
     nodes: buildNodes(document),
   };

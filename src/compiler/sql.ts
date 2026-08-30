@@ -53,14 +53,14 @@ const previousExpression = (
 ): string => {
   if (constraint.kind === "exclude") {
     const names = constraint.pitchNames[0] ?? [];
-    return Array.from({ length: constraint.window }, (_, index) => {
+    return Array.from({ length: constraint.lookback }, (_, index) => {
       const column = `_previous_pitch_${index + 1}`;
       return `(${column} IS NULL OR NOT ${pitchSetExpression(column, names, parameters)})`;
     }).join(" AND ");
   }
 
   const positions = Array.from(
-    { length: constraint.window },
+    { length: constraint.lookback },
     (_, index) => index + 1,
   );
   const arrangements = combinations(positions, constraint.pitchNames.length);
@@ -84,7 +84,7 @@ const previousExpression = (
 
 const outcomeExpression = (
   outcome: Outcome,
-  horizon: ExecutionPlan["target"]["horizon"],
+  horizon: ExecutionPlan["target"]["period"],
 ): string => {
   if (horizon === "plate appearance") {
     const values: Readonly<Record<string, readonly string[]>> = {
@@ -165,16 +165,22 @@ export const generateSql = (plan: ExecutionPlan): SqlProgram => {
       `(pitching_team IN (${teamValues}) OR batting_team IN (${teamValues}))`,
     );
   }
+  if (plan.dataFilters.batterSides?.length) {
+    parameters.push(...plan.dataFilters.batterSides);
+    filters.push(
+      `batter_side IN (${placeholders(plan.dataFilters.batterSides.length)})`,
+    );
+  }
   const maxWindow = Math.max(
-    plan.primary?.window ?? 0,
-    plan.baseline?.window ?? 0,
+    plan.primary?.lookback ?? 0,
+    plan.baseline?.lookback ?? 0,
   );
   const lagColumns = Array.from(
     { length: maxWindow },
     (_, index) =>
       `LAG(pitch_name, ${index + 1}) OVER (PARTITION BY game_id, plate_appearance_id ORDER BY pitch_number) AS _previous_pitch_${index + 1}`,
   );
-  const outcome = outcomeExpression(plan.target.outcome, plan.target.horizon);
+  const outcome = outcomeExpression(plan.target.event, plan.target.period);
   const selectColumns = [
     ...new Set([
       "game_id",
@@ -185,6 +191,8 @@ export const generateSql = (plan: ExecutionPlan): SqlProgram => {
       "plate_appearance_result",
       ...(plan.dataFilters.dates ? ["game_date"] : []),
       ...(plan.dataFilters.teams ? ["pitching_team", "batting_team"] : []),
+      ...(plan.dataFilters.counts ? ["balls", "strikes"] : []),
+      ...(plan.dataFilters.batterSides ? ["batter_side"] : []),
       ...plan.features.matchColumns,
       ...plan.features.featureColumns,
     ]),
@@ -204,7 +212,16 @@ export const generateSql = (plan: ExecutionPlan): SqlProgram => {
     const condition = constraint
       ? previousExpression(constraint, parameters)
       : "TRUE";
-    return `SELECT '${label}' AS analysis_group, *, CASE WHEN ${outcome} THEN 1 ELSE 0 END AS target_outcome\n  FROM ordered\n  WHERE ${targetCondition} AND (${condition})`;
+    const countCondition = plan.dataFilters.counts?.length
+      ? ` AND (${plan.dataFilters.counts
+          .map((count) => {
+            const [balls, strikes] = count.split("-").map(Number);
+            parameters.push(balls ?? 0, strikes ?? 0);
+            return "(balls = ? AND strikes = ?)";
+          })
+          .join(" OR ")})`
+      : "";
+    return `SELECT '${label}' AS analysis_group, *, CASE WHEN ${outcome} THEN 1 ELSE 0 END AS target_outcome\n  FROM ordered\n  WHERE ${targetCondition}${countCondition} AND (${condition})`;
   };
   const primarySql = groupSql("primary", plan.primary);
   const baselineSql = plan.baseline

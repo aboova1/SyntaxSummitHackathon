@@ -86,7 +86,7 @@
             <span>Theme</span>
           </button>
           <div class="rail-version">
-            <span>v0.2</span><span>Local studio</span>
+            <span>v0.3</span><span>Local studio</span>
           </div>
         </div>
       </aside>
@@ -248,16 +248,16 @@
                 ><small>Name the event to estimate.</small>
               </div>
               <div>
-                <span>03</span><strong>Facts</strong
+                <span>03</span><strong>Sequence</strong
+                ><small>State the setup and baseline.</small>
+              </div>
+              <div>
+                <span>04</span><strong>Facts</strong
                 ><small>Use known game facts.</small>
               </div>
               <div>
-                <span>04</span><strong>Method</strong
-                ><small>Use approved analysis.</small>
-              </div>
-              <div>
                 <span>05</span><strong>Evidence</strong
-                ><small>Review limits and records.</small>
+                ><small>Select and review the result.</small>
               </div>
             </section>
           </section>
@@ -328,6 +328,33 @@
                     <div class="matchup-visual" id="matchup-visual">
                       <span>Loading synthetic player profiles…</span>
                     </div>
+                    <div class="form-fields matchup-filters">
+                      <label>
+                        <span>Count group</span>
+                        <select id="playground-counts" aria-label="Count group">
+                          <option value="">All counts</option>
+                          <option value="0-0, 1-1, 2-2">Even counts</option>
+                          <option value="0-1, 1-2">Pitcher ahead</option>
+                          <option value="0-0, 0-1, 1-0, 1-1">
+                            Early counts
+                          </option>
+                        </select>
+                        <small
+                          >The study includes these pre-pitch counts.</small
+                        >
+                      </label>
+                      <label>
+                        <span>Batter side</span>
+                        <select id="playground-side" aria-label="Batter side">
+                          <option value="">Both sides</option>
+                          <option value="left">Left</option>
+                          <option value="right">Right</option>
+                        </select>
+                        <small
+                          >The study includes this side of the plate.</small
+                        >
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -367,8 +394,12 @@
                         id="playground-previous"
                         aria-label="Previous pitch"
                       >
-                        <option value="fastball">Fastball</option>
+                        <option value="four-seam fastball">
+                          Four-seam fastball
+                        </option>
+                        <option value="sinker">Sinker</option>
                         <option value="curveball">Curveball</option>
+                        <option value="changeup">Changeup</option>
                       </select>
                       <small>The baseline excludes this pitch type.</small>
                     </label>
@@ -388,11 +419,8 @@
                   <span class="form-step">04</span>
                   <div class="form-fields one-column">
                     <label>
-                      <span>Evidence method</span>
-                      <select
-                        id="playground-method"
-                        aria-label="Evidence method"
-                      >
+                      <span>Evidence</span>
+                      <select id="playground-method" aria-label="Evidence">
                         <option value="simulation">Automatic simulation</option>
                         <option value="model">Approved model</option>
                         <option value="observed">Observed records</option>
@@ -488,20 +516,20 @@
                   <code>study: Fastball before slider</code>
                 </li>
                 <li>
-                  <span>data</span>
+                  <span>source · scope</span>
                   <div>
                     <strong>Select the records</strong>
-                    <p>Name the source, seasons, and games.</p>
+                    <p>Name the source. Add only the filters you need.</p>
                   </div>
-                  <code>source: team pitch warehouse</code>
+                  <code>source: team pitches</code>
                 </li>
                 <li>
-                  <span>use</span>
+                  <span>resources</span>
                   <div>
-                    <strong>Select approved tools</strong>
-                    <p>Name a model, comparison, or simulation.</p>
+                    <strong>Override a team default</strong>
+                    <p>Omit this block for the approved default tools.</p>
                   </div>
-                  <code>model: approved outcome model</code>
+                  <code>model: approved event model</code>
                 </li>
                 <li>
                   <span>target</span>
@@ -509,23 +537,15 @@
                     <strong>Name what to estimate</strong>
                     <p>The target is never a fact.</p>
                   </div>
-                  <code>outcome: swing and miss</code>
+                  <code>event: swing and miss</code>
                 </li>
                 <li>
-                  <span>when</span>
+                  <span>sequence</span>
                   <div>
-                    <strong>Define the main condition</strong>
-                    <p>State the sequence that you want to test.</p>
+                    <strong>Define both conditions</strong>
+                    <p>One lookback applies to the setup and baseline.</p>
                   </div>
-                  <code>sequence: fastball</code>
-                </li>
-                <li>
-                  <span>versus</span>
-                  <div>
-                    <strong>Define the baseline</strong>
-                    <p>Change only the condition under review.</p>
-                  </div>
-                  <code>exclude: fastball</code>
+                  <code>after: fastball · versus: without fastball</code>
                 </li>
                 <li>
                   <span>facts</span>
@@ -536,12 +556,20 @@
                   <code>match: pitcher, count, batter side</code>
                 </li>
                 <li>
-                  <span>method</span>
+                  <span>evidence</span>
                   <div>
                     <strong>Select the result type</strong>
                     <p>Simulation estimates an event chance automatically.</p>
                   </div>
-                  <code>method: simulation</code>
+                  <code>evidence: simulation</code>
+                </li>
+                <li>
+                  <span>include</span>
+                  <div>
+                    <strong>Add a useful view</strong>
+                    <p>Core evidence stays automatic.</p>
+                  </div>
+                  <code>- zone map · - 5 examples</code>
                 </li>
               </ol>
             </section>
@@ -559,7 +587,7 @@
                   <p>Example: a swing and miss on this slider.</p>
                 </article>
                 <article>
-                  <code>when · versus</code>
+                  <code>sequence</code>
                   <h3>Compared conditions</h3>
                   <p>Example: a prior fastball against no prior fastball.</p>
                 </article>

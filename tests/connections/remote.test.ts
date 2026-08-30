@@ -80,7 +80,7 @@ describe("remote connectors", () => {
   });
 
   it("sends a bounded remote data request", async () => {
-    const study = `data:\n  source: remote pitches\n\nanalyze:\n  target:\n    pitch: slider\n    outcome: contact\n    horizon: this pitch\n  method: observed\n`;
+    const study = `source: remote pitches\n\nscope:\n  counts: 1-2\n\ntarget:\n  event: contact\n  pitch: slider\n\nevidence: observed\n`;
     const catalog = `catalog: remote test\nversion: 1\ndata:\n  remote pitches:\n    connector: http json\n    connection: service\n    object: baseball.pitches\n    contract: seam.pitch.v1\n    access: read only\npolicy:\n  default_match: []\n  default_feature_groups: []\n`;
     const plan = compileProject(study, catalog).plan;
     if (!plan) throw new Error("remote fixture did not compile");
@@ -88,10 +88,14 @@ describe("remote connectors", () => {
       const body = JSON.parse(String(init?.body)) as {
         dataset: string;
         columns: readonly string[];
+        filters: { readonly counts?: readonly string[] };
+        target_filters: { readonly counts: readonly string[] };
         plan_fingerprint: string;
       };
       expect(body.dataset).toBe("baseball.pitches");
       expect(body.columns).toContain("pitch_name");
+      expect(body.filters.counts).toBeUndefined();
+      expect(body.target_filters.counts).toEqual(["1-2"]);
       expect(body.plan_fingerprint).toBe(plan.fingerprint);
       return json({
         snapshot: "warehouse-snapshot-7",
@@ -107,6 +111,8 @@ describe("remote connectors", () => {
             pitch_name: "slider",
             description: "foul",
             plate_appearance_result: "field out",
+            balls: 1,
+            strikes: 2,
           },
         ],
       });
@@ -226,8 +232,8 @@ describe("remote connectors", () => {
         {
           pitchNames: ["slider"],
           sourcePitch: "slider",
-          outcome: "swing and miss",
-          horizon: "this pitch",
+          event: "swing and miss",
+          period: "this pitch",
         },
         ["balls"],
       ),

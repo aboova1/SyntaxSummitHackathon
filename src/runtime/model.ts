@@ -94,9 +94,9 @@ export class BuiltinOutcomeModel implements OutcomeModel {
     const read = (row: SelectedPitch, field: string, fallback = 0): number =>
       allowed.has(field) ? numeric(row, field, fallback) : fallback;
     return rows.map((row) => {
-      const base = BASES[target.outcome] ?? 0.2;
+      const base = BASES[target.event] ?? 0.2;
       const whiffDirection =
-        target.outcome === "swing and miss" || target.outcome === "strikeout"
+        target.event === "swing and miss" || target.event === "strikeout"
           ? 1
           : 0;
       let score = logit(base);
@@ -126,11 +126,11 @@ export class BuiltinOutcomeModel implements OutcomeModel {
         0.0015 *
         Math.max(0, read(row, "pitcher_pitch_count_before", 0) - 80);
       score +=
-        target.outcome === "called strike"
+        target.event === "called strike"
           ? 0.7 * read(row, "catcher_framing_rate_before", 0)
           : 0;
       score +=
-        target.outcome === "ball in play"
+        target.event === "ball in play"
           ? 0.4 * (read(row, "park_run_factor_before", 1) - 1)
           : 0;
       if (hasRecentFastball(row) && target.sourcePitch === "slider")

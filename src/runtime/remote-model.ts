@@ -242,8 +242,8 @@ export class KServeOutcomeModel implements OutcomeModel {
               .digest("hex"),
             parameters: {
               contract: this.#resource.input,
-              target_outcome: target.outcome,
-              target_horizon: target.horizon,
+              target_outcome: target.event,
+              target_horizon: target.period,
             },
             inputs: [
               {

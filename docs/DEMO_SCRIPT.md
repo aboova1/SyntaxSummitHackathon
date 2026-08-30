@@ -26,19 +26,19 @@ Point to `facts`.
 
 Say: “These are inputs known before the pitch.”
 
-Point to `when` and `versus`.
+Point to `sequence.after` and `sequence.versus`.
 
-Explain that both groups share one target and one method.
+Explain that both groups share one target, lookback, and evidence type.
 
 ## 1:20 to 2:00 — Compiler
 
 Select **Check**.
 
-Change `outcome` to `result`.
+Change `event` to `result`.
 
 Show the exact source error and correction.
 
-Restore `outcome`.
+Restore `event`.
 
 Select **Compile**.
 
@@ -62,7 +62,7 @@ Explain that Monte Carlo error excludes model and data uncertainty.
 
 ## 3:05 to 3:45 — Automatic simulation
 
-Show `method: simulation`.
+Show `evidence: simulation`.
 
 Explain that the user does not set a seed or trial count.
 

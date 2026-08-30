@@ -44,6 +44,10 @@ They cannot become input facts for that target.
 
 Historical rates must use records before the target pitch.
 
+Count filters apply to target pitches after the runtime builds pitch history.
+
+Remote gateways receive count values in `target_filters` for this reason.
+
 The plan records every selected feature column.
 
 ## Missing fields
@@ -71,7 +75,7 @@ The source must return an exact snapshot identifier.
 
 ## Demonstration data
 
-`data/sample-pitches.csv` contains 25,920 synthetic rows.
+`data/sample-pitches.csv` contains 31,104 synthetic rows.
 
 The generator is `scripts/generate-demo-data.ts`.
 

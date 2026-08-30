@@ -43,7 +43,7 @@ export type ImmediateOutcome = (typeof IMMEDIATE_OUTCOMES)[number];
 export type PlateAppearanceOutcome = (typeof PLATE_APPEARANCE_OUTCOMES)[number];
 export type Outcome = ImmediateOutcome | PlateAppearanceOutcome;
 export type Horizon = "this pitch" | "plate appearance";
-export type AnalysisMethod = "observed" | "model" | "simulation";
+export type EvidenceType = "observed" | "model" | "simulation";
 
 export const MATCH_FIELDS = [
   "pitcher",
@@ -77,50 +77,52 @@ export interface DateRange {
   readonly end: string;
 }
 
-export interface DataScope {
-  readonly source: string;
+export interface Scope {
   readonly seasons?: readonly number[];
   readonly dates?: DateRange;
   readonly games?: string;
   readonly teams?: readonly string[];
   readonly pitchers?: readonly string[];
   readonly batters?: readonly string[];
+  readonly counts?: readonly string[];
+  readonly batterSides?: readonly ("left" | "right" | "switch")[];
   readonly span: SourceSpan;
 }
 
 export interface ResourceSelection {
   readonly model?: string;
-  readonly comparison?: string;
-  readonly simulation?: string;
+  readonly matching?: string;
+  readonly simulator?: string;
   readonly span: SourceSpan;
 }
 
 export interface Target {
-  readonly pitch?: PitchName;
-  readonly outcome: Outcome;
-  readonly horizon: Horizon;
+  readonly event: Outcome;
+  readonly pitch: PitchName;
+  readonly period: Horizon;
   readonly span: SourceSpan;
 }
 
 export interface PreviousConstraint {
   readonly kind: "sequence" | "exclude";
   readonly pitches: readonly PitchName[];
-  readonly window: number;
+  readonly lookback: number;
   readonly span: SourceSpan;
 }
 
-export interface RecordCondition {
-  readonly previous: PreviousConstraint;
+export interface Sequence {
+  readonly after: PreviousConstraint;
+  readonly versus?: PreviousConstraint;
   readonly span: SourceSpan;
 }
 
 export interface Facts {
   readonly match: readonly MatchField[];
-  readonly accountFor: readonly FeatureGroup[];
+  readonly consider: readonly FeatureGroup[];
   readonly span: SourceSpan;
 }
 
-export type ReportAddition =
+export type IncludedView =
   | { readonly kind: "zone map"; readonly span: SourceSpan }
   | {
       readonly kind: "examples";
@@ -131,21 +133,16 @@ export type ReportAddition =
   | { readonly kind: "batter breakdown"; readonly span: SourceSpan }
   | { readonly kind: "park breakdown"; readonly span: SourceSpan };
 
-export interface Analysis {
-  readonly target: Target;
-  readonly when?: RecordCondition;
-  readonly versus?: RecordCondition;
-  readonly facts?: Facts;
-  readonly method: AnalysisMethod;
-  readonly report: readonly ReportAddition[];
-  readonly span: SourceSpan;
-}
-
 export interface SeamDocument {
-  readonly version: "0.2";
+  readonly version: "0.3";
   readonly study?: string;
-  readonly data: DataScope;
-  readonly use?: ResourceSelection;
-  readonly analyze: Analysis;
+  readonly source: string;
+  readonly scope?: Scope;
+  readonly resources?: ResourceSelection;
+  readonly target: Target;
+  readonly sequence?: Sequence;
+  readonly facts?: Facts;
+  readonly evidence: EvidenceType;
+  readonly include: readonly IncludedView[];
   readonly span: SourceSpan;
 }

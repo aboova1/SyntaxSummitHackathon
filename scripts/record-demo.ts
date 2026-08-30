@@ -33,13 +33,13 @@ try {
   await page.waitForFunction(() =>
     (
       document.querySelector("#source") as HTMLTextAreaElement | null
-    )?.value.includes("outcome: swing and miss"),
+    )?.value.includes("event: swing and miss"),
   );
   await page.waitForTimeout(2_500);
 
   const original = await editor.inputValue();
   await editor.fill(
-    original.replace("outcome: swing and miss", "result: swing and miss"),
+    original.replace("event: swing and miss", "result: swing and miss"),
   );
   await page.getByRole("button", { name: "Check" }).click();
   await page.getByText("S202 · semantic").waitFor();
@@ -56,9 +56,14 @@ try {
   await page.getByRole("button", { name: "Run study" }).click();
   await page.getByRole("heading", { name: "Fastball before slider" }).waitFor();
   await page.waitForTimeout(5_000);
-  await page.locator(".zone-section").scrollIntoViewIfNeeded();
+  await page
+    .getByRole("heading", { name: "Primary target zone" })
+    .scrollIntoViewIfNeeded();
   await page.waitForTimeout(3_500);
-  await page.locator(".meaning").scrollIntoViewIfNeeded();
+  await page.getByRole("button", { name: "Language guide" }).click();
+  await page
+    .getByRole("heading", { name: "One form. One meaning." })
+    .scrollIntoViewIfNeeded();
   await page.waitForTimeout(3_500);
 } finally {
   await page.close();

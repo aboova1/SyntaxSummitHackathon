@@ -16,11 +16,15 @@ The data supports useful prediction. It does not capture the complete decision.
 
 Recent models can estimate near-term pitch results from pitch history and context.
 
-One 2026 Transformer reported a 0.811 ROC AUC for its binary task.
+One 2026 preprint reported a 0.811 ROC AUC for its binary task.
 
 That score measures discrimination. It does not prove calibrated probabilities.
 
-[Counterfactual pitch-sequence study](https://arxiv.org/pdf/2606.17345)
+The study used MLB data and one main swing-out objective.
+
+Its authors call for more objectives, external tests, and clear explanations.
+
+[Counterfactual pitch-sequence study](https://arxiv.org/abs/2606.17345)
 
 ### Physical contrast
 

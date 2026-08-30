@@ -2,7 +2,7 @@ catalog: SeamScript synthetic demonstration
 version: 1
 
 defaults:
-  model: approved demo outcome
+  model: approved demo event
   comparison: matched comparison
   simulation: adaptive simulation
 
@@ -15,7 +15,7 @@ data:
     access: read only
 
 models:
-  approved demo outcome:
+  approved demo event:
     registry:
       connector: static
       name: transparent-demo-outcome
@@ -46,7 +46,7 @@ algorithms:
     output: seam.simulation.result.v1
 
 policy:
-  minimum_group_size: 100
+  minimum_group_size: 5
   initial_trials: 10000
   maximum_trials: 100000
   maximum_half_width: 0.005

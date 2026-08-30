@@ -2,7 +2,7 @@ catalog: team baseball
 version: 1
 
 defaults:
-  model: approved pitch outcome
+  model: approved pitch event
   comparison: matched comparison
   simulation: adaptive event simulation
 
@@ -15,7 +15,7 @@ data:
     access: read only
 
 models:
-  approved pitch outcome:
+  approved pitch event:
     registry:
       connector: mlflow
       connection: team model registry

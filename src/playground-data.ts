@@ -154,7 +154,7 @@ export const loadPlaygroundData = async (
     pitchers,
     batters,
     targetPitches: ["slider"],
-    previousPitches: ["fastball", "curveball"],
+    previousPitches: ["four-seam fastball", "sinker", "curveball", "changeup"],
     outcomes: ["swing and miss", "contact", "ball in play"],
     methods: ["simulation", "model", "observed"],
   };

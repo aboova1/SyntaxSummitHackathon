@@ -1,11 +1,11 @@
 import type {
-  AnalysisMethod,
+  EvidenceType,
   FeatureGroup,
   Horizon,
   MatchField,
   Outcome,
   PitchName,
-  ReportAddition,
+  IncludedView,
 } from "../compiler/ast.js";
 import type { ResourcePlan } from "../catalog/resolve.js";
 
@@ -16,10 +16,10 @@ export type PlanNodeKind =
   | "select primary"
   | "select baseline"
   | "match groups"
-  | "predict outcome"
+  | "predict event"
   | "simulate outcome"
   | "summarize"
-  | "build report";
+  | "build included views";
 
 export interface PlanNode {
   readonly id: string;
@@ -31,15 +31,15 @@ export interface PlanNode {
 export interface FrozenTarget {
   readonly pitchNames: readonly string[];
   readonly sourcePitch: PitchName | null;
-  readonly outcome: Outcome;
-  readonly horizon: Horizon;
+  readonly event: Outcome;
+  readonly period: Horizon;
 }
 
 export interface FrozenPreviousConstraint {
   readonly kind: "sequence" | "exclude";
   readonly pitchNames: readonly (readonly string[])[];
   readonly sourcePitches: readonly PitchName[];
-  readonly window: number;
+  readonly lookback: number;
 }
 
 export interface FeaturePlan {
@@ -54,7 +54,7 @@ export interface ExecutionPlan {
   readonly version: 1;
   readonly fingerprint: string;
   readonly study: string;
-  readonly method: AnalysisMethod;
+  readonly evidence: EvidenceType;
   readonly target: FrozenTarget;
   readonly primary?: FrozenPreviousConstraint;
   readonly baseline?: FrozenPreviousConstraint;
@@ -66,8 +66,10 @@ export interface ExecutionPlan {
     readonly teams?: readonly string[];
     readonly pitchers?: readonly string[];
     readonly batters?: readonly string[];
+    readonly counts?: readonly string[];
+    readonly batterSides?: readonly ("left" | "right" | "switch")[];
   };
-  readonly report: readonly ReportAddition[];
+  readonly include: readonly IncludedView[];
   readonly resources: ResourcePlan;
   readonly nodes: readonly PlanNode[];
 }

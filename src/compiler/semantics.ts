@@ -5,10 +5,8 @@ import {
   MATCH_FIELDS,
   PITCH_GROUPS,
   PLATE_APPEARANCE_OUTCOMES,
-  type Analysis,
-  type AnalysisMethod,
-  type DataScope,
   type DateRange,
+  type EvidenceType,
   type Facts,
   type FeatureGroup,
   type Horizon,
@@ -16,10 +14,11 @@ import {
   type Outcome,
   type PitchName,
   type PreviousConstraint,
-  type RecordCondition,
-  type ReportAddition,
+  type IncludedView,
   type ResourceSelection,
+  type Scope,
   type SeamDocument,
+  type Sequence,
   type Target,
 } from "./ast.js";
 import type { CstMapping, CstScalar } from "./cst.js";
@@ -31,29 +30,31 @@ export interface SemanticResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
-const TOP_LEVEL_KEYS = ["study", "data", "use", "analyze"] as const;
-const DATA_KEYS = [
+const TOP_LEVEL_KEYS = [
+  "study",
   "source",
+  "scope",
+  "resources",
+  "target",
+  "sequence",
+  "facts",
+  "evidence",
+  "include",
+] as const;
+const SCOPE_KEYS = [
   "seasons",
   "dates",
   "games",
   "teams",
   "pitchers",
   "batters",
+  "counts",
+  "batter sides",
 ] as const;
-const USE_KEYS = ["model", "comparison", "simulation"] as const;
-const ANALYZE_KEYS = [
-  "target",
-  "when",
-  "versus",
-  "facts",
-  "method",
-  "report",
-] as const;
-const TARGET_KEYS = ["pitch", "outcome", "horizon"] as const;
-const CONDITION_KEYS = ["previous"] as const;
-const PREVIOUS_KEYS = ["sequence", "exclude", "window"] as const;
-const FACT_KEYS = ["match", "account for"] as const;
+const RESOURCE_KEYS = ["model", "matching", "simulator"] as const;
+const TARGET_KEYS = ["event", "pitch", "period"] as const;
+const SEQUENCE_KEYS = ["after", "versus", "lookback"] as const;
+const FACT_KEYS = ["match", "consider"] as const;
 const METHODS = ["observed", "model", "simulation"] as const;
 const HORIZONS = ["this pitch", "plate appearance"] as const;
 const GAME_FILTERS = [
@@ -145,12 +146,31 @@ const parseSeasons = (
   return undefined;
 };
 
-const parseData = (
+const parseCounts = (
+  scalar: CstScalar | undefined,
+  diagnostics: Diagnostic[],
+): readonly string[] | undefined => {
+  if (!scalar) return undefined;
+  const values = parseCommaList(scalar);
+  if (
+    values.length > 0 &&
+    values.every((value) => /^[0-3]-[0-2]$/u.test(value))
+  )
+    return values;
+  diagnostics.push(
+    error("semantic", "S214", `Invalid count list '${scalar.value}'.`, {
+      hint: "Use values such as '0-0, 1-2, 2-2'.",
+      span: scalar.span,
+    }),
+  );
+  return undefined;
+};
+
+const parseScope = (
   mapping: CstMapping,
   diagnostics: Diagnostic[],
-): DataScope | undefined => {
-  const reader = new MappingReader(mapping, diagnostics, DATA_KEYS, "data");
-  const source = reader.requiredScalar("source");
+): Omit<Scope, "span"> => {
+  const reader = new MappingReader(mapping, diagnostics, SCOPE_KEYS, "scope");
   const seasons = parseSeasons(reader.optionalScalar("seasons"), diagnostics);
   const dates = parseDates(reader.optionalScalar("dates"), diagnostics);
   const games = parseEnum(
@@ -159,9 +179,14 @@ const parseData = (
     diagnostics,
     "games value",
   );
-  if (!source) return undefined;
+  const counts = parseCounts(reader.optionalScalar("counts"), diagnostics);
+  const batterSides = parseTypedList(
+    reader.optionalScalar("batter sides"),
+    ["left", "right", "switch"] as const,
+    diagnostics,
+    "batter side",
+  );
   return {
-    source: source.value,
     ...(seasons ? { seasons } : {}),
     ...(dates ? { dates } : {}),
     ...(games ? { games } : {}),
@@ -174,24 +199,30 @@ const parseData = (
     ...(reader.optionalScalar("batters")
       ? { batters: parseCommaList(reader.optionalScalar("batters")) }
       : {}),
-    span: mapping.span,
+    ...(counts ? { counts } : {}),
+    ...(batterSides.length > 0 ? { batterSides } : {}),
   };
 };
 
-const parseUse = (
+const parseResources = (
   mapping: CstMapping,
   diagnostics: Diagnostic[],
 ): ResourceSelection => {
-  const reader = new MappingReader(mapping, diagnostics, USE_KEYS, "use");
+  const reader = new MappingReader(
+    mapping,
+    diagnostics,
+    RESOURCE_KEYS,
+    "resources",
+  );
   return {
     ...(reader.optionalScalar("model")?.value
       ? { model: reader.optionalScalar("model")!.value }
       : {}),
-    ...(reader.optionalScalar("comparison")?.value
-      ? { comparison: reader.optionalScalar("comparison")!.value }
+    ...(reader.optionalScalar("matching")?.value
+      ? { matching: reader.optionalScalar("matching")!.value }
       : {}),
-    ...(reader.optionalScalar("simulation")?.value
-      ? { simulation: reader.optionalScalar("simulation")!.value }
+    ...(reader.optionalScalar("simulator")?.value
+      ? { simulator: reader.optionalScalar("simulator")!.value }
       : {}),
     span: mapping.span,
   };
@@ -216,7 +247,7 @@ const parsePitchList = (
   return result;
 };
 
-const parseWindow = (
+const parseLookback = (
   scalar: CstScalar | undefined,
   diagnostics: Diagnostic[],
 ): number | undefined => {
@@ -224,107 +255,105 @@ const parseWindow = (
   const match = /^([1-9]\d*) pitch(?:es)?$/u.exec(scalar.value);
   if (!match) {
     diagnostics.push(
-      error(
-        "semantic",
-        "S220",
-        `Invalid prior-pitch window '${scalar.value}'.`,
-        {
-          hint: "Use '1 pitch' or '2 pitches'.",
-          span: scalar.span,
-        },
-      ),
+      error("semantic", "S220", `Invalid lookback '${scalar.value}'.`, {
+        hint: "Use '1 pitch' or '2 pitches'.",
+        span: scalar.span,
+      }),
     );
     return undefined;
   }
   const value = Number(match[1]);
   if (value > 20) {
     diagnostics.push(
-      error(
-        "semantic",
-        "S221",
-        "A prior-pitch window cannot exceed 20 pitches.",
-        {
-          hint: "Use a smaller window inside one plate appearance.",
-          span: scalar.span,
-        },
-      ),
+      error("semantic", "S221", "A lookback cannot exceed 20 pitches.", {
+        hint: "Use a smaller window inside one plate appearance.",
+        span: scalar.span,
+      }),
     );
     return undefined;
   }
   return value;
 };
 
-const parsePrevious = (
-  mapping: CstMapping,
+const makePrevious = (
+  kind: PreviousConstraint["kind"],
+  scalar: CstScalar,
+  lookback: number,
   diagnostics: Diagnostic[],
 ): PreviousConstraint | undefined => {
-  const reader = new MappingReader(
-    mapping,
-    diagnostics,
-    PREVIOUS_KEYS,
-    "previous",
-  );
-  const sequence = reader.optionalScalar("sequence");
-  const exclude = reader.optionalScalar("exclude");
-  if ((sequence && exclude) || (!sequence && !exclude)) {
+  const pitches = parsePitchList(scalar, diagnostics);
+  if (kind === "exclude" && pitches.length !== 1) {
     diagnostics.push(
-      error(
-        "semantic",
-        "S222",
-        "A previous block needs one sequence or one exclusion.",
-        {
-          hint: "Use either 'sequence:' or 'exclude:'.",
-          span: mapping.span,
-        },
-      ),
-    );
-    return undefined;
-  }
-  const window = parseWindow(reader.requiredScalar("window"), diagnostics);
-  const selected = sequence ?? exclude;
-  const pitches = parsePitchList(selected, diagnostics);
-  if (exclude && pitches.length !== 1) {
-    diagnostics.push(
-      error("semantic", "S223", "An exclusion accepts one pitch name.", {
-        hint: "Write one pitch after 'exclude:'.",
-        span: exclude.span,
+      error("semantic", "S223", "A 'without' baseline accepts one pitch.", {
+        hint: "Use 'versus: without fastball'.",
+        span: scalar.span,
       }),
     );
   }
-  if (sequence && window !== undefined && pitches.length > window) {
+  if (kind === "sequence" && pitches.length > lookback) {
     diagnostics.push(
-      error(
-        "semantic",
-        "S224",
-        "The prior sequence is longer than its window.",
-        {
-          hint: `Use a window of at least ${pitches.length} pitches.`,
-          span: mapping.span,
-        },
-      ),
+      error("semantic", "S224", "The sequence is longer than its lookback.", {
+        hint: `Use a lookback of at least ${pitches.length} pitches.`,
+        span: scalar.span,
+      }),
     );
   }
-  if (!selected || window === undefined || pitches.length === 0)
-    return undefined;
-  return {
-    kind: sequence ? "sequence" : "exclude",
-    pitches,
-    window,
-    span: mapping.span,
-  };
+  if (pitches.length === 0) return undefined;
+  return { kind, pitches, lookback, span: scalar.span };
 };
 
-const parseCondition = (
+const parseSequence = (
   mapping: CstMapping,
   diagnostics: Diagnostic[],
-  path: "when" | "versus",
-): RecordCondition | undefined => {
-  const reader = new MappingReader(mapping, diagnostics, CONDITION_KEYS, path);
-  const previousMapping = reader.requiredMapping("previous");
-  if (!previousMapping) return undefined;
-  const previous = parsePrevious(previousMapping, diagnostics);
-  if (!previous) return undefined;
-  return { previous, span: mapping.span };
+): Sequence | undefined => {
+  const reader = new MappingReader(
+    mapping,
+    diagnostics,
+    SEQUENCE_KEYS,
+    "sequence",
+  );
+  const after = reader.requiredScalar("after");
+  const versus = reader.optionalScalar("versus");
+  const lookback = parseLookback(
+    reader.requiredScalar("lookback"),
+    diagnostics,
+  );
+  if (!after || lookback === undefined) return undefined;
+
+  const primary = makePrevious("sequence", after, lookback, diagnostics);
+  let baseline: PreviousConstraint | undefined;
+  if (versus) {
+    const without = /^without\s+(.+)$/u.exec(versus.value);
+    const afterBaseline = /^after\s+(.+)$/u.exec(versus.value);
+    if (!without && !afterBaseline) {
+      diagnostics.push(
+        error(
+          "semantic",
+          "S222",
+          "A versus value must start with 'after' or 'without'.",
+          {
+            hint: "Use 'versus: without fastball' or 'versus: after changeup'.",
+            span: versus.span,
+          },
+        ),
+      );
+    } else {
+      const value = without?.[1] ?? afterBaseline?.[1] ?? "";
+      baseline = makePrevious(
+        without ? "exclude" : "sequence",
+        { ...versus, value },
+        lookback,
+        diagnostics,
+      );
+    }
+  }
+
+  if (!primary) return undefined;
+  return {
+    after: primary,
+    ...(baseline ? { versus: baseline } : {}),
+    span: mapping.span,
+  };
 };
 
 const parseTarget = (
@@ -333,34 +362,39 @@ const parseTarget = (
 ): Target | undefined => {
   const reader = new MappingReader(mapping, diagnostics, TARGET_KEYS, "target");
   const pitch = parseEnum(
-    reader.optionalScalar("pitch"),
+    reader.requiredScalar("pitch"),
     PITCHES,
     diagnostics,
     "target pitch",
   );
-  const horizon = parseEnum(
-    reader.requiredScalar("horizon"),
+  const periodScalar = reader.optionalScalar("period");
+  const explicitPeriod = parseEnum(
+    periodScalar,
     HORIZONS,
     diagnostics,
-    "horizon",
+    "period",
   );
-  const outcomeScalar = reader.requiredScalar("outcome");
+  const eventScalar = reader.requiredScalar("event");
   const allOutcomes = [
     ...IMMEDIATE_OUTCOMES,
     ...PLATE_APPEARANCE_OUTCOMES,
   ] as const;
-  const outcome = parseEnum(outcomeScalar, allOutcomes, diagnostics, "outcome");
+  const outcome = parseEnum(eventScalar, allOutcomes, diagnostics, "event");
+  const horizon: Horizon | undefined = explicitPeriod
+    ? (explicitPeriod as Horizon)
+    : outcome &&
+        PLATE_APPEARANCE_OUTCOMES.includes(outcome as never) &&
+        !IMMEDIATE_OUTCOMES.includes(outcome as never)
+      ? "plate appearance"
+      : outcome
+        ? "this pitch"
+        : undefined;
   if (!pitch) {
     diagnostics.push(
-      error(
-        "semantic",
-        "S230",
-        "A target needs an anchor pitch in version 0.2.",
-        {
-          hint: "Add 'pitch:' inside 'target'.",
-          span: mapping.span,
-        },
-      ),
+      error("semantic", "S230", "A target needs a pitch.", {
+        hint: "Add 'pitch:' inside 'target'.",
+        span: mapping.span,
+      }),
     );
   }
   if (
@@ -371,7 +405,7 @@ const parseTarget = (
     diagnostics.push(
       error("semantic", "S231", `'${outcome}' is not a one-pitch outcome.`, {
         hint: `Use one of: ${IMMEDIATE_OUTCOMES.join(", ")}.`,
-        span: outcomeScalar?.span ?? mapping.span,
+        span: eventScalar?.span ?? mapping.span,
       }),
     );
   }
@@ -387,16 +421,16 @@ const parseTarget = (
         `'${outcome}' is not a plate-appearance outcome.`,
         {
           hint: `Use one of: ${PLATE_APPEARANCE_OUTCOMES.join(", ")}.`,
-          span: outcomeScalar?.span ?? mapping.span,
+          span: eventScalar?.span ?? mapping.span,
         },
       ),
     );
   }
-  if (!horizon || !outcome) return undefined;
+  if (!pitch || !horizon || !outcome) return undefined;
   return {
-    ...(pitch ? { pitch } : {}),
-    outcome: outcome as Outcome,
-    horizon: horizon as Horizon,
+    pitch,
+    event: outcome as Outcome,
+    period: horizon as Horizon,
     span: mapping.span,
   };
 };
@@ -425,8 +459,8 @@ const parseFacts = (mapping: CstMapping, diagnostics: Diagnostic[]): Facts => {
       diagnostics,
       "match fact",
     ) as readonly MatchField[],
-    accountFor: parseTypedList(
-      reader.optionalScalar("account for"),
+    consider: parseTypedList(
+      reader.optionalScalar("consider"),
       FEATURE_GROUPS,
       diagnostics,
       "feature group",
@@ -435,11 +469,11 @@ const parseFacts = (mapping: CstMapping, diagnostics: Diagnostic[]): Facts => {
   };
 };
 
-const parseReport = (
+const parseInclude = (
   items: readonly CstScalar[],
   diagnostics: Diagnostic[],
-): readonly ReportAddition[] => {
-  const additions: ReportAddition[] = [];
+): readonly IncludedView[] => {
+  const additions: IncludedView[] = [];
   for (const item of items) {
     const examples = /^([1-9]\d*) examples$/u.exec(item.value);
     if (examples) {
@@ -449,7 +483,7 @@ const parseReport = (
           error(
             "semantic",
             "S240",
-            "The report can include at most 20 examples.",
+            "A study can include at most 20 examples.",
             {
               hint: "Use '20 examples' or fewer.",
               span: item.span,
@@ -470,59 +504,11 @@ const parseReport = (
         "park breakdown",
       ] as const,
       diagnostics,
-      "report item",
+      "included view",
     );
     if (kind) additions.push({ kind, span: item.span });
   }
   return additions;
-};
-
-const parseAnalysis = (
-  mapping: CstMapping,
-  diagnostics: Diagnostic[],
-): Analysis | undefined => {
-  const reader = new MappingReader(
-    mapping,
-    diagnostics,
-    ANALYZE_KEYS,
-    "analyze",
-  );
-  const targetMapping = reader.requiredMapping("target");
-  const target = targetMapping
-    ? parseTarget(targetMapping, diagnostics)
-    : undefined;
-  const whenMapping = reader.optionalMapping("when");
-  const when = whenMapping
-    ? parseCondition(whenMapping, diagnostics, "when")
-    : undefined;
-  const versusMapping = reader.optionalMapping("versus");
-  const versus = versusMapping
-    ? parseCondition(versusMapping, diagnostics, "versus")
-    : undefined;
-  const factsMapping = reader.optionalMapping("facts");
-  const facts = factsMapping
-    ? parseFacts(factsMapping, diagnostics)
-    : undefined;
-  const method = parseEnum(
-    reader.requiredScalar("method"),
-    METHODS,
-    diagnostics,
-    "method",
-  );
-  const reportSequence = reader.optionalSequence("report");
-  const report = reportSequence
-    ? parseReport(reportSequence.items, diagnostics)
-    : [];
-  if (!target || !method) return undefined;
-  return {
-    target,
-    ...(when ? { when } : {}),
-    ...(versus ? { versus } : {}),
-    ...(facts ? { facts } : {}),
-    method: method as AnalysisMethod,
-    report,
-    span: mapping.span,
-  };
 };
 
 const checkTopLevelOrder = (
@@ -544,7 +530,7 @@ const checkTopLevelOrder = (
           "S250",
           `Top-level key '${entry?.key}' is out of order.`,
           {
-            hint: "Use this order: study, data, use, analyze.",
+            hint: "Use this order: study, source, scope, resources, target, sequence, facts, evidence, include.",
             ...(entry ? { span: entry.keySpan } : {}),
           },
         ),
@@ -567,23 +553,50 @@ export const analyzeSemantics = (
   );
   checkTopLevelOrder(root, diagnostics);
   const study = reader.optionalScalar("study")?.value;
-  const dataMapping = reader.requiredMapping("data");
-  const useMapping = reader.optionalMapping("use");
-  const analyzeMapping = reader.requiredMapping("analyze");
-  const data = dataMapping ? parseData(dataMapping, diagnostics) : undefined;
-  const use = useMapping ? parseUse(useMapping, diagnostics) : undefined;
-  const analyze = analyzeMapping
-    ? parseAnalysis(analyzeMapping, diagnostics)
+  const source = reader.requiredScalar("source");
+  const scopeMapping = reader.optionalMapping("scope");
+  const scope = scopeMapping ? parseScope(scopeMapping, diagnostics) : {};
+  const resourcesMapping = reader.optionalMapping("resources");
+  const resources = resourcesMapping
+    ? parseResources(resourcesMapping, diagnostics)
     : undefined;
+  const targetMapping = reader.requiredMapping("target");
+  const target = targetMapping
+    ? parseTarget(targetMapping, diagnostics)
+    : undefined;
+  const sequenceMapping = reader.optionalMapping("sequence");
+  const sequence = sequenceMapping
+    ? parseSequence(sequenceMapping, diagnostics)
+    : undefined;
+  const factsMapping = reader.optionalMapping("facts");
+  const facts = factsMapping
+    ? parseFacts(factsMapping, diagnostics)
+    : undefined;
+  const evidence = parseEnum(
+    reader.requiredScalar("evidence"),
+    METHODS,
+    diagnostics,
+    "evidence type",
+  );
+  const includeSequence = reader.optionalSequence("include");
+  const include = includeSequence
+    ? parseInclude(includeSequence.items, diagnostics)
+    : [];
 
-  if (!data || !analyze || hasErrors(diagnostics)) return { diagnostics };
+  if (!source || !target || !evidence || hasErrors(diagnostics))
+    return { diagnostics };
   return {
     document: {
-      version: "0.2",
+      version: "0.3",
       ...(study ? { study } : {}),
-      data,
-      ...(use ? { use } : {}),
-      analyze,
+      source: source.value,
+      ...(scopeMapping ? { scope: { ...scope, span: scopeMapping.span } } : {}),
+      ...(resources ? { resources } : {}),
+      target,
+      ...(sequence ? { sequence } : {}),
+      ...(facts ? { facts } : {}),
+      evidence: evidence as EvidenceType,
+      include,
       span: root.span,
     },
     diagnostics,

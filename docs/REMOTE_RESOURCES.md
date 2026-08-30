@@ -64,6 +64,7 @@ SeamScript does not train or choose an undeclared model.
 
 ## Example files
 
+- `examples/fastball-slider.seam`
 - `examples/seam.catalog.yml`
 - `examples/seam.connections.yml`
 

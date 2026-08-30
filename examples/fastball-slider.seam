@@ -1,32 +1,31 @@
 study: Fastball before slider
 
-data:
-  source: team pitches
+source: team pitches
+
+scope:
   seasons: 2023 through 2025
   games: regular season
 
-use:
-  model: approved pitch outcome
-  comparison: matched comparison
-  simulation: adaptive event simulation
+resources:
+  model: approved pitch event
+  matching: matched comparison
+  simulator: adaptive event simulation
 
-analyze:
-  target:
-    pitch: slider
-    outcome: swing and miss
-    horizon: this pitch
-  when:
-    previous:
-      sequence: fastball
-      window: 2 pitches
-  versus:
-    previous:
-      exclude: fastball
-      window: 2 pitches
-  facts:
-    match: pitcher, count, batter side, season
-    account for: batter history, pitcher form, pitch shape, game situation, ballpark, defense
-  method: simulation
-  report:
-    - zone map
-    - 5 examples
+target:
+  event: swing and miss
+  pitch: slider
+
+sequence:
+  after: fastball
+  versus: without fastball
+  lookback: 2 pitches
+
+facts:
+  match: pitcher, count, batter side, season
+  consider: batter history, pitcher form, pitch shape, game situation, ballpark, defense
+
+evidence: simulation
+
+include:
+  - zone map
+  - 5 examples

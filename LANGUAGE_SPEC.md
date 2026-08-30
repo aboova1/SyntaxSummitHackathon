@@ -1,86 +1,81 @@
 # SeamScript language specification
 
-Version 0.2
+Version 0.3
 
-## 1. Design rule
+## 1. Design rules
 
 Write each idea once.
 
 Use one key for one meaning.
 
-Keep the grammar small and fixed.
+Keep targets separate from known facts.
 
-Make predictions different from facts.
+Follow the order of a game-plan study.
 
-Version 0.2 removes the old `sequence`, `compare`, `estimate`, and `show` blocks.
+Use team defaults unless the user needs an override.
 
-One `analyze` block now contains the complete question.
-
-## 2. Complete example
+## 2. Complete study
 
 ```seam
-study: Fastball before slider
+study: Fastball setup for slider
 
-data:
-  source: team pitches
+source: team pitches
+
+scope:
   seasons: 2023 through 2025
   games: regular season
 
-use:
-  model: approved pitch outcome
-  comparison: matched comparison
-  simulation: adaptive event simulation
+target:
+  event: swing and miss
+  pitch: slider
 
-analyze:
-  target:
-    pitch: slider
-    outcome: swing and miss
-    horizon: this pitch
-  when:
-    previous:
-      sequence: fastball
-      window: 2 pitches
-  versus:
-    previous:
-      exclude: fastball
-      window: 2 pitches
-  facts:
-    match: pitcher, count, batter side, season
-    account for: batter history, pitcher form, pitch shape, game situation, ballpark, defense
-  method: simulation
-  report:
-    - zone map
-    - 5 examples
+sequence:
+  after: fastball
+  versus: without fastball
+  lookback: 2 pitches
+
+facts:
+  match: pitcher, count, batter side, season
+  consider: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense
+
+evidence: simulation
+
+include:
+  - zone map
+  - 5 examples
 ```
 
-The meaning is formulaic:
+The fixed workflow is:
 
 ```text
-Use this data and these approved tools.
-Analyze this target outcome.
-Select records with this prior sequence.
-Compare them with this baseline when present.
-Use these facts as inputs.
-Apply this method.
-Add these optional report items.
+source -> target -> sequence -> facts -> evidence -> include
 ```
+
+`scope` filters the source.
+
+`resources` overrides a team default.
+
+Both blocks stay next to the item that they change.
 
 ## 3. Top-level form
 
-SeamScript has four top-level keys:
+SeamScript accepts these keys in this order:
 
 1. `study`
-2. `data`
-3. `use`
-4. `analyze`
+2. `source`
+3. `scope`
+4. `resources`
+5. `target`
+6. `sequence`
+7. `facts`
+8. `evidence`
+9. `include`
 
-`study` and `use` are optional.
+`source`, `target`, and `evidence` are required.
 
-`data` and `analyze` are required.
+All other keys are optional.
 
-The order is fixed.
-
-The `study` value is only a display name.
+`study` is only a display name.
 
 It never changes execution.
 
@@ -94,28 +89,35 @@ It never changes execution.
 - Put a colon after each key.
 - Start a list item with `-`.
 - Start a full-line comment with `#`.
-- Use blank lines only for reading comfort.
+- Use commas inside one-line lists.
 - Treat unknown keys as errors.
 - Treat duplicate keys as errors.
 
-The lexer splits a key-value line at its first unquoted colon.
-
 Normal values do not need quotes.
 
-## 5. Data
+## 5. Source and scope
 
-The `data` block selects the factual records.
+`source` names one approved data resource.
 
 ```seam
-data:
-  source: team pitches
-  seasons: 2023 through 2025
-  games: regular season
+source: team pitches
 ```
 
-`source` selects one named catalog resource.
+The catalog can connect that name to local or remote data.
 
-Version 0.2 supports these filters:
+`scope` adds record filters.
+
+```seam
+scope:
+  seasons: 2023 through 2025
+  games: regular season
+  pitchers: P100
+  batters: B100
+  counts: 1-2, 2-2
+  batter sides: left
+```
+
+Version 0.3 accepts these scope keys:
 
 - `seasons`
 - `dates`
@@ -123,86 +125,61 @@ Version 0.2 supports these filters:
 - `teams`
 - `pitchers`
 - `batters`
+- `counts`
+- `batter sides`
 
 `through` defines an inclusive range.
-
-Dates use the same form:
 
 ```seam
 dates: 2025-04-01 through 2025-04-30
 ```
 
-Commas separate values on one line.
+Commas separate individual values.
 
-The connector sends supported filters to the data source.
+## 6. Resources
 
-## 6. Approved tools
+The catalog supplies approved defaults.
 
-The `use` block selects named computation resources.
+Most users omit `resources`.
+
+Use this block only for an approved override.
 
 ```seam
-use:
-  model: approved pitch outcome
-  comparison: matched comparison
-  simulation: adaptive event simulation
+resources:
+  model: approved pitch event
+  matching: matched comparison
+  simulator: adaptive event simulation
 ```
 
-The keys have fixed roles:
+Each key has one role:
 
-- `model` predicts the target outcome.
-- `comparison` builds the baseline comparison.
-- `simulation` runs repeated outcome paths.
+- `model` predicts the target event.
+- `matching` makes the two record groups comparable.
+- `simulator` runs repeated event trials.
 
-The runtime calculates required uncertainty values automatically.
+The values can name local or remote services.
 
-The runtime stops when a required resource is unavailable.
+The user never writes an address or credential.
 
-SeamScript never trains a replacement model automatically.
+The runtime never trains a replacement model.
 
-Catalog defaults supply omitted resources.
+## 7. Target
 
-## 7. Analyze
+`target` states the event under review.
 
-The `analyze` block contains one complete analysis.
-
-It has these keys:
-
-- `target`
-- `when`
-- `versus`
-- `facts`
-- `method`
-- `report`
-
-`target` and `method` are required.
-
-The other keys are optional.
-
-## 8. Target
-
-The `target` block defines the result to estimate.
-
-It never defines an input feature.
+It never states an input fact.
 
 ```seam
 target:
+  event: swing and miss
   pitch: slider
-  outcome: swing and miss
-  horizon: this pitch
 ```
 
-`pitch` selects the pitch under analysis.
+`event` states what the study measures or predicts.
 
-`outcome` selects the predicted or measured event.
+`pitch` anchors the state before that event.
 
-`horizon` selects the end of the prediction.
-
-It accepts these values:
-
-- `this pitch`
-- `plate appearance`
-
-Immediate-pitch outcomes are:
+Immediate events are:
 
 - `swing`
 - `swing and miss`
@@ -211,7 +188,7 @@ Immediate-pitch outcomes are:
 - `called strike`
 - `ball in play`
 
-Plate-appearance outcomes are:
+Plate-appearance events are:
 
 - `strikeout`
 - `walk`
@@ -219,190 +196,136 @@ Plate-appearance outcomes are:
 - `ball in play`
 - `reach base`
 
-`pitch` anchors the target state. Version 0.2 always requires it.
+The compiler infers the event period.
 
-## 9. Prior sequence
+Immediate-only events use `this pitch`.
 
-The `when` block selects the primary records.
+Plate-appearance-only events use `plate appearance`.
 
-```seam
-when:
-  previous:
-    sequence: fastball
-    window: 2 pitches
-```
+`ball in play` uses `this pitch` by default.
 
-`sequence` lists pitches from oldest to newest.
-
-Use commas for more than one pitch.
+Add `period` only when you must remove this ambiguity.
 
 ```seam
-sequence: changeup, fastball
+target:
+  event: ball in play
+  pitch: slider
+  period: plate appearance
 ```
 
-`window` defines how many prior pitches the compiler can inspect.
+## 8. Sequence
 
-The target pitch is not part of this window.
-
-The sequence order must match.
-
-Other pitches can occur between sequence members.
-
-Use `window: 1 pitch` for the immediately prior pitch.
-
-The target pitch never belongs in this prior window.
-
-## 10. Baseline
-
-The optional `versus` block defines one baseline.
-
-It replaces the old `compare` block.
+`sequence` defines the pitch setup under review.
 
 ```seam
-versus:
-  previous:
-    exclude: fastball
-    window: 2 pitches
+sequence:
+  after: fastball
+  versus: without fastball
+  lookback: 2 pitches
 ```
 
-`exclude` means the named pitch cannot occur in the complete window.
+`after` defines the primary setup.
 
-The baseline uses the same target outcome and method.
+`versus` defines one optional baseline.
 
-It does not repeat those values.
+`lookback` applies to both conditions.
 
-Version 0.2 supports these baseline forms:
+The user writes it once.
+
+For another setup, start `versus` with `after`.
 
 ```seam
-previous:
-  exclude: fastball
-  window: 2 pitches
+sequence:
+  after: changeup, fastball
+  versus: after curveball
+  lookback: 3 pitches
 ```
+
+For an exclusion, start `versus` with `without`.
 
 ```seam
-previous:
-  sequence: changeup
-  window: 2 pitches
+versus: without fastball
 ```
 
-## 11. Facts
+Pitch lists run from oldest to newest.
 
-The `facts` block defines information that can affect the result.
+The order must match inside the lookback.
 
-Facts are inputs. They are never prediction targets.
+Other pitches can occur between listed pitches.
+
+Use `lookback: 1 pitch` for the immediately prior pitch.
+
+History never crosses a plate-appearance boundary.
+
+## 9. Facts
+
+`facts` contains information known before the target event.
+
+Facts are never prediction targets.
 
 ```seam
 facts:
   match: pitcher, count, batter side, season
-  account for: batter history, pitcher form, pitch shape, game situation, ballpark, defense
+  consider: batter history, pitcher form, pitch shape, game situation
 ```
 
-`match` defines facts that must be equal across comparison groups.
+`match` names facts that must align across both groups.
 
-`account for` defines feature groups for models and adjustment algorithms.
+`consider` names feature groups for prediction and adjustment.
 
-The runtime reports the exact fields used from every group.
+The catalog supplies safe defaults when this block is absent.
 
-Version 0.2 defines these feature groups:
+Supported match facts are:
 
-### Batter history
+- `pitcher`
+- `batter`
+- `count`
+- `batter side`
+- `pitcher hand`
+- `season`
+- `ballpark`
+- `inning`
+- `outs`
+- `base state`
 
-- Batter side
-- Season-to-date rates
-- Rolling rates
-- Pitch-type splits
-- Zone swing rate
-- Chase rate
-- Contact rate
-- Prior batter-pitcher history
+Supported feature groups are:
 
-### Pitcher form
+- `batter history`
+- `pitcher form`
+- `pitch shape`
+- `game situation`
+- `ballpark`
+- `defense`
+- `sequence history`
 
-- Pitcher hand
-- Season-to-date rates
-- Rolling rates
-- Arsenal use
-- Pitch count
-- Days of rest
-- Times through the order
+The execution plan lists every field from these groups.
 
-### Pitch shape
+## 10. Feature timing
 
-- Pitch type
-- Velocity
-- Movement
-- Spin
-- Release position
-- Extension
-- Plate location
-- Differences from prior pitches
-
-### Game situation
-
-- Balls and strikes
-- Outs
-- Inning
-- Score difference
-- Base state
-- Leverage
-- Batter times faced
-
-### Ballpark
-
-- Park identifier
-- Park factors
-- Altitude
-- Roof state
-- Weather available before the pitch
-
-### Defense
-
-- Catcher identifier
-- Catcher framing history
-- Fielder alignment
-- Fielder quality
-
-### Sequence history
-
-- Prior pitch types
-- Prior pitch results
-- Velocity changes
-- Movement changes
-- Location changes
-
-## 12. Feature timing
-
-Every field has one availability class:
+Each field has one availability class.
 
 - `before pitch`
 - `after pitch`
 - `after plate appearance`
 - `after game`
 
-Predictive features can use only `before pitch` values.
+Predictive facts can use only `before pitch` values.
 
-Historical aggregates must use dates before the target pitch.
+Historical rates must stop before the target pitch.
 
-The target outcome can use later values only as its label.
+The target event can use later values only as its label.
 
-The compiler rejects feature leakage before execution.
+The compiler rejects feature leakage.
 
-Examples of forbidden prediction inputs are:
+## 11. Evidence
 
-- Target pitch result
-- Target exit velocity
-- Final plate-appearance result
-- Future season statistics
-
-## 13. Method
-
-`method` selects one evidence method.
+`evidence` selects one result type.
 
 ```seam
-method: simulation
+evidence: simulation
 ```
 
-It accepts these values:
+It accepts three values:
 
 - `observed`
 - `model`
@@ -410,27 +333,27 @@ It accepts these values:
 
 `observed` calculates rates from selected records.
 
-`model` calculates a chance with the approved outcome model.
+`model` requests chances from the approved model.
 
-`simulation` repeatedly samples from approved model results.
+`simulation` samples the approved model chance repeatedly.
 
-SeamScript never labels these methods as causal.
+No value claims a causal effect.
 
-## 14. Automatic simulation
+## 12. Automatic simulation
 
 The user does not set a seed or trial count.
 
 The runtime starts with 10,000 trials.
 
-For a binary event, it calculates this Monte Carlo half-width:
+It calculates this Monte Carlo half-width:
 
 ```text
 1.96 * sqrt(chance * (1 - chance) / trials)
 ```
 
-It doubles the trials when the half-width exceeds 0.5 percentage points.
+It doubles the trials when the error limit fails.
 
-It stops when the limit passes or after 100,000 trials.
+It stops after the limit passes or after 100,000 trials.
 
 The normal result shows the trial count and stopping reason.
 
@@ -438,35 +361,21 @@ It never shows the seed.
 
 A protected audit record stores the seed.
 
-The runtime reports sample, model, and Monte Carlo uncertainty separately.
+## 13. Included views
 
-## 15. Report additions
-
-The runtime always reports required evidence.
+The runtime always returns core evidence.
 
 The user does not request it again.
 
-Required evidence includes:
-
-- Target definition
-- Data scope
-- Sample counts
-- Observed rates
-- Method result
-- Baseline difference when present
-- Uncertainty
-- Exact resource versions
-- Warnings
-
-The optional `report` list adds supporting views.
+`include` adds only supporting views.
 
 ```seam
-report:
+include:
   - zone map
   - 5 examples
 ```
 
-Version 0.2 accepts these additions:
+Version 0.3 accepts:
 
 - `zone map`
 - `<number> examples`
@@ -474,39 +383,37 @@ Version 0.2 accepts these additions:
 - `batter breakdown`
 - `park breakdown`
 
-The automatic audit shows fields, filters, trials, stopping rules, and versions.
+Core evidence includes:
 
-It does not show credentials or the hidden seed.
+- target definition
+- data scope
+- sample counts
+- observed rates
+- selected evidence
+- baseline difference
+- uncertainty
+- exact resource versions
+- warnings
 
-## 16. Cross-key rules
+## 14. Cross-key rules
 
-The compiler checks the complete analysis.
+`evidence: observed` needs only the source.
 
-`method: observed` needs only a data source.
+`evidence: model` needs an approved model.
 
-`method: model` needs an outcome model.
+`evidence: simulation` needs an approved model and simulator.
 
-`method: simulation` needs an outcome model and simulation algorithm.
+A `versus` value needs an approved matching resource.
 
-`versus` needs a comparison algorithm.
+The catalog supplies omitted resources when possible.
 
-`horizon: this pitch` accepts only immediate-pitch outcomes.
+The runtime gets sample and error limits from catalog policy.
 
-`horizon: plate appearance` accepts only plate-appearance outcomes.
+The user does not repeat those limits.
 
-Version 0.2 predicts that final result from the anchored pitch state.
+## 15. Pitch names
 
-Its simulation samples that result. It does not build a pitch-by-pitch path.
-
-A future path simulator will need an approved pitch-choice policy.
-
-The runtime gets minimum sample rules from the catalog policy.
-
-The normal language does not repeat those technical limits.
-
-## 17. Pitch names
-
-Version 0.2 defines these atomic names:
+Atomic names are:
 
 - `four-seam fastball`
 - `sinker`
@@ -518,41 +425,39 @@ Version 0.2 defines these atomic names:
 - `changeup`
 - `splitter`
 
-It defines these groups:
+Group names are:
 
 - `fastball`
 - `breaking ball`
 - `off-speed pitch`
 
-The data catalog defines each group expansion.
+The catalog defines each group expansion.
 
-The execution plan shows the expansion.
+The execution plan records that expansion.
 
-## 18. Resource catalog
+## 16. Resource catalog
 
-The catalog maps readable names to local or remote resources.
-
-The analyst does not write addresses or credentials.
+The catalog maps readable names to resources.
 
 ```yaml
 catalog: team baseball
 version: 1
 
 defaults:
-  model: approved pitch outcome
+  model: approved pitch event
   comparison: matched comparison
   simulation: adaptive event simulation
 
 data:
   team pitches:
-    connector: csv
-    connection: demo data
-    object: data/sample-pitches.csv
+    connector: flight sql
+    connection: team warehouse
+    object: baseball.analytics.statcast_pitches
     contract: seam.pitch.v1
     access: read only
 
 models:
-  approved pitch outcome:
+  approved pitch event:
     registry:
       connector: mlflow
       connection: team model registry
@@ -567,118 +472,95 @@ models:
     require:
       status: approved
       calibration: passed
-
-algorithms:
-  matched comparison:
-    connector: openapi
-    connection: team analytics gateway
-    operation: comparePitchSequences
-    release: 3.2.1
-    input: seam.comparison.request.v1
-    output: seam.comparison.result.v1
 ```
 
-The catalog can use local resources without changing the study.
+The catalog can change a connector without changing a study.
 
-## 19. Remote checks
+Before execution, the compiler performs these checks:
 
-Before execution, the compiler performs these steps:
+1. Resolve each readable name.
+2. Check the connection profile.
+3. Check input and output contracts.
+4. Check approval requirements.
+5. Resolve aliases to exact versions.
+6. Freeze all versions in the execution plan.
+7. Check data movement and feature timing.
 
-1. Resolve every readable resource name.
-2. Check each connection profile.
-3. Read resource information.
-4. Check input and output contracts.
-5. Check approval requirements.
-6. Resolve aliases to exact versions.
-7. Freeze all versions in the execution plan.
-8. Check data movement and feature timing.
+The runtime never resolves an alias again during that run.
 
-The runtime never resolves an alias again during that execution.
+It stops when a frozen version becomes unavailable.
 
-If the exact version becomes unavailable, the execution stops.
+## 17. Errors
 
-It never trains or selects an undeclared replacement.
-
-## 20. Compiler forms
-
-The compiler produces these forms:
-
-1. Lexer tokens
-2. Concrete syntax tree
-3. Typed analysis tree
-4. Checked resource plan
-5. Bounded execution graph
-6. Generated SQL and service requests
-
-The runtime executes only the bounded graph.
-
-## 21. Connector contract
-
-Each connector provides these operations:
+Each error gives a line, key, problem, and correction.
 
 ```text
-describe
-check
-run
-cancel
-audit
-```
-
-Each remote request gets a time limit and idempotency key.
-
-The runtime retries only safe or idempotent requests.
-
-The execution plan lists every service that receives data.
-
-## 22. Errors
-
-Each error names the source, line, key, problem, and correction.
-
-```text
-study.seam:24:5 [S202]
-Unknown target key "result".
-Use 'outcome'.
+study.seam:9:3 [S202]
+Unknown key 'outcome' in target.
+Use 'event'.
 ```
 
 ```text
-study.seam:37:3 [S315]
-"simulation" needs an outcome model.
-Add "use.model" or configure an approved catalog default.
+study.seam:20:1 [S315]
+'simulation' needs an outcome model.
+Add 'resources.model' or configure a catalog default.
 ```
 
-## 23. Core grammar
+## 18. Core grammar
 
 ```ebnf
-document       = study?, data, use?, analyze ;
+document       = study?, source, scope?, resources?, target,
+                 sequence?, facts?, evidence, include? ;
 study          = "study:", text, newline ;
-data           = "data:", newline, data_entry+ ;
-use            = "use:", newline, use_entry+ ;
-analyze        = "analyze:", newline, analyze_entry+ ;
-target         = indent, "target:", newline, target_entry+ ;
-when           = indent, "when:", newline, previous ;
-versus         = indent, "versus:", newline, previous ;
-facts          = indent, "facts:", newline, facts_entry+ ;
-report         = indent, "report:", newline, report_item+ ;
-previous       = indent, "previous:", newline, previous_entry+ ;
-report_item    = indent, indent, "- ", report_value, newline ;
+source         = "source:", resource_name, newline ;
+scope          = "scope:", newline, scope_entry+ ;
+resources      = "resources:", newline, resource_entry+ ;
+target         = "target:", newline, target_entry+ ;
+sequence       = "sequence:", newline, sequence_entry+ ;
+facts          = "facts:", newline, facts_entry+ ;
+evidence       = "evidence:", evidence_value, newline ;
+include        = "include:", newline, include_item+ ;
+include_item   = indent, "- ", include_value, newline ;
 entry          = indent, key, ": ", value, newline ;
 indent         = "  " ;
 newline        = "\n" ;
 ```
 
-The parser reads structure first.
+The parser reads indentation first.
 
-The semantic checker then reads domain values.
+The semantic checker then reads baseball values.
 
-This separation keeps errors specific.
+## 19. Version 0.2 migration
 
-## 24. Standards
+Version 0.3 removes wrapper blocks and repeated lookbacks.
+
+| Version 0.2               | Version 0.3                    |
+| ------------------------- | ------------------------------ |
+| `data.source`             | `source`                       |
+| other `data` keys         | `scope`                        |
+| `use`                     | `resources`                    |
+| `use.comparison`          | `resources.matching`           |
+| `use.simulation`          | `resources.simulator`          |
+| `analyze.target.outcome`  | `target.event`                 |
+| `target.horizon`          | optional `target.period`       |
+| `when.previous.sequence`  | `sequence.after`               |
+| two `window` values       | one `sequence.lookback`        |
+| `versus.previous.exclude` | `sequence.versus: without ...` |
+| `facts.account for`       | `facts.consider`               |
+| `method`                  | `evidence`                     |
+| `report`                  | `include`                      |
+
+The `analyze` wrapper has no replacement.
+
+Its child ideas now appear directly in study order.
+
+## 20. Standards
 
 - [YAML 1.2.2](https://yaml.org/spec/1.2.2/)
-- [CommonMark 0.31.2](https://spec.commonmark.org/spec)
-- [JSON RFC 8259](https://www.rfc-editor.org/info/rfc8259/)
+- [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/)
+- [JSON RFC 8259](https://www.rfc-editor.org/info/rfc8259)
 - [JSON Schema 2020-12](https://json-schema.org/draft/2020-12)
 - [Apache Arrow Flight SQL](https://arrow.apache.org/docs/format/FlightSql.html)
-- [KServe V2 inference protocol](https://kserve.github.io/website/docs/concepts/architecture/data-plane/v2-protocol)
+- [KServe V2](https://kserve.github.io/website/docs/concepts/architecture/data-plane/v2-protocol)
 - [OpenAPI 3.2.0](https://spec.openapis.org/oas/latest.html)
-- [MLflow model registry aliases](https://mlflow.org/docs/latest/ml/model-registry/workflow)
+- [MLflow registry aliases](https://mlflow.org/docs/latest/ml/model-registry/workflow)

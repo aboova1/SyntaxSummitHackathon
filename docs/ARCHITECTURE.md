@@ -23,7 +23,7 @@ The lexer reads indentation, keys, values, list marks, comments, and line ending
 
 The parser builds a generic mapping and list tree.
 
-The semantic checker builds the typed `data`, `use`, and `analyze` forms.
+The semantic checker maps the direct study form to a typed execution document.
 
 It rejects unknown keys, duplicate keys, invalid values, and invalid block combinations.
 

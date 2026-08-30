@@ -46,7 +46,7 @@ const percent = (value: number | undefined): string =>
 
 const printResult = (result: StudyResult): void => {
   process.stdout.write(`\n${result.study}\n`);
-  process.stdout.write(`Target: ${result.target.outcome}`);
+  process.stdout.write(`Target: ${result.target.event}`);
   if (result.target.sourcePitch)
     process.stdout.write(` on ${result.target.sourcePitch}`);
   process.stdout.write(`\nEvidence: ${result.evidence}\n\n`);
@@ -131,7 +131,7 @@ const compileFromFiles = async (studyPath: string, catalogPath: string) => {
 program
   .name("seam")
   .description("Compile and run SeamScript baseball studies.")
-  .version("0.2.0");
+  .version("0.3.0");
 
 program
   .command("check")
