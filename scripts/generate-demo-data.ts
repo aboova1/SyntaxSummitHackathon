@@ -32,6 +32,7 @@ const counts: readonly [number, number][] = [
   [2, 2],
 ];
 const pitchers = ["P100", "P200", "P300", "P400"];
+const batters = ["B100", "B101", "B102", "B103", "B104", "B105"];
 const parks = ["Wrigley Field", "American Family Field", "Busch Stadium"];
 const teams = ["CHC", "MIL", "STL", "CIN"];
 
@@ -150,121 +151,122 @@ const makeBase = (options: {
 let appearanceIndex = 0;
 for (const season of [2023, 2024, 2025]) {
   for (const pitcher of pitchers) {
-    for (const batterSide of ["left", "right"] as const) {
-      for (const count of counts) {
-        for (let repetition = 0; repetition < 5; repetition += 1) {
-          for (const condition of ["primary", "baseline"] as const) {
-            appearanceIndex += 1;
-            const gameIndex = Math.floor((appearanceIndex - 1) / 12);
-            const gameId = `G${season}-${String(gameIndex).padStart(4, "0")}`;
-            const plateAppearance = `PA${String(appearanceIndex).padStart(6, "0")}`;
-            const batterNumber =
-              100 + ((appearanceIndex + (batterSide === "left" ? 0 : 9)) % 18);
-            const batter = `B${batterNumber}`;
-            const base = makeBase({
-              season,
-              pitcher,
-              batter,
-              batterSide,
-              count,
-              plateAppearance,
-              gameId,
-              gameIndex,
-              repetition,
-            });
-            const first = {
-              ...base,
-              pitch_number: 1,
-              balls: 0,
-              strikes: 0,
-              pitch_name: "changeup",
-              description: "called strike",
-              release_speed: fixed(random.around(83, 2)),
-              break_x: fixed(random.around(10, 2)),
-              break_z: fixed(random.around(5, 2)),
-              spin_rate: Math.round(random.around(1800, 180)),
-              plate_x: fixed(random.around(0, 1.5)),
-              plate_z: fixed(random.around(2.5, 1.4)),
-            };
-            const secondPitch =
-              condition === "primary" ? "four-seam fastball" : "curveball";
-            const secondSpeed = condition === "primary" ? 95 : 79;
-            const second = {
-              ...base,
-              pitch_number: 2,
-              balls: 0,
-              strikes: 1,
-              pitch_name: secondPitch,
-              description: "ball",
-              release_speed: fixed(random.around(secondSpeed, 2)),
-              break_x: fixed(
-                random.around(condition === "primary" ? -4 : 8, 2),
-              ),
-              break_z: fixed(
-                random.around(condition === "primary" ? 15 : -6, 2),
-              ),
-              spin_rate: Math.round(
-                random.around(condition === "primary" ? 2350 : 2650, 180),
-              ),
-              plate_x: fixed(random.around(0, 1.8)),
-              plate_z: fixed(random.around(2.6, 1.5)),
-              previous_pitch_1: "changeup",
-              previous_result_1: "called strike",
-              previous_speed_1: first.release_speed,
-            };
-            const pitcherIndex = pitchers.indexOf(pitcher);
-            const batterIndex = Number(batter.slice(1));
-            const probability = clamp(
-              0.205 +
-                (condition === "primary" ? 0.075 : 0) +
-                pitcherIndex * 0.018 +
-                (batterIndex % 7) * 0.008 +
-                count[1] * 0.025 -
-                count[0] * 0.012,
-              0.08,
-              0.58,
-            );
-            const missed = random.next() < probability;
-            const targetDescription = missed
-              ? "swinging strike"
-              : random.next() < 0.45
-                ? "foul"
-                : "hit into play";
-            const paResult =
-              missed && count[1] === 2 ? "strikeout" : "field out";
-            const target = {
-              ...base,
-              pitch_number: 3,
-              pitch_name: "slider",
-              description: targetDescription,
-              release_speed: fixed(random.around(85, 2.4)),
-              break_x: fixed(random.around(7, 2.5)),
-              break_z: fixed(random.around(1.5, 2)),
-              spin_rate: Math.round(random.around(2480, 220)),
-              plate_x: fixed(random.around(0.42, 1.1)),
-              plate_z: fixed(random.around(2.1, 1.1)),
-              exit_velocity:
-                targetDescription === "hit into play"
-                  ? fixed(random.around(88, 24), 1)
-                  : null,
-              plate_appearance_result: paResult,
-              previous_pitch_1: secondPitch,
-              previous_pitch_2: "changeup",
-              previous_result_1: "ball",
-              previous_speed_1: second.release_speed,
-              speed_change_from_previous: fixed(
-                Number(second.release_speed) - 85,
-              ),
-              break_x_change_from_previous: fixed(7 - Number(second.break_x)),
-              break_z_change_from_previous: fixed(1.5 - Number(second.break_z)),
-              location_x_change_from_previous: fixed(
-                Number(base.intended_plate_x) - Number(second.plate_x),
-              ),
-              location_z_change_from_previous: fixed(
-                Number(base.intended_plate_z) - Number(second.plate_z),
-              ),
-            };
-            rows.push(first, second, target);
+    for (const batter of batters) {
+      for (const batterSide of ["left", "right"] as const) {
+        for (const count of counts) {
+          for (let repetition = 0; repetition < 5; repetition += 1) {
+            for (const condition of ["primary", "baseline"] as const) {
+              appearanceIndex += 1;
+              const gameIndex = Math.floor((appearanceIndex - 1) / 12);
+              const gameId = `G${season}-${String(gameIndex).padStart(4, "0")}`;
+              const plateAppearance = `PA${String(appearanceIndex).padStart(6, "0")}`;
+              const base = makeBase({
+                season,
+                pitcher,
+                batter,
+                batterSide,
+                count,
+                plateAppearance,
+                gameId,
+                gameIndex,
+                repetition,
+              });
+              const first = {
+                ...base,
+                pitch_number: 1,
+                balls: 0,
+                strikes: 0,
+                pitch_name: "changeup",
+                description: "called strike",
+                release_speed: fixed(random.around(83, 2)),
+                break_x: fixed(random.around(10, 2)),
+                break_z: fixed(random.around(5, 2)),
+                spin_rate: Math.round(random.around(1800, 180)),
+                plate_x: fixed(random.around(0, 1.5)),
+                plate_z: fixed(random.around(2.5, 1.4)),
+              };
+              const secondPitch =
+                condition === "primary" ? "four-seam fastball" : "curveball";
+              const secondSpeed = condition === "primary" ? 95 : 79;
+              const second = {
+                ...base,
+                pitch_number: 2,
+                balls: 0,
+                strikes: 1,
+                pitch_name: secondPitch,
+                description: "ball",
+                release_speed: fixed(random.around(secondSpeed, 2)),
+                break_x: fixed(
+                  random.around(condition === "primary" ? -4 : 8, 2),
+                ),
+                break_z: fixed(
+                  random.around(condition === "primary" ? 15 : -6, 2),
+                ),
+                spin_rate: Math.round(
+                  random.around(condition === "primary" ? 2350 : 2650, 180),
+                ),
+                plate_x: fixed(random.around(0, 1.8)),
+                plate_z: fixed(random.around(2.6, 1.5)),
+                previous_pitch_1: "changeup",
+                previous_result_1: "called strike",
+                previous_speed_1: first.release_speed,
+              };
+              const pitcherIndex = pitchers.indexOf(pitcher);
+              const batterIndex = Number(batter.slice(1));
+              const probability = clamp(
+                0.205 +
+                  (condition === "primary" ? 0.075 : 0) +
+                  pitcherIndex * 0.018 +
+                  (batterIndex % 7) * 0.008 +
+                  count[1] * 0.025 -
+                  count[0] * 0.012,
+                0.08,
+                0.58,
+              );
+              const missed = random.next() < probability;
+              const targetDescription = missed
+                ? "swinging strike"
+                : random.next() < 0.45
+                  ? "foul"
+                  : "hit into play";
+              const paResult =
+                missed && count[1] === 2 ? "strikeout" : "field out";
+              const target = {
+                ...base,
+                pitch_number: 3,
+                pitch_name: "slider",
+                description: targetDescription,
+                release_speed: fixed(random.around(85, 2.4)),
+                break_x: fixed(random.around(7, 2.5)),
+                break_z: fixed(random.around(1.5, 2)),
+                spin_rate: Math.round(random.around(2480, 220)),
+                plate_x: fixed(random.around(0.42, 1.1)),
+                plate_z: fixed(random.around(2.1, 1.1)),
+                exit_velocity:
+                  targetDescription === "hit into play"
+                    ? fixed(random.around(88, 24), 1)
+                    : null,
+                plate_appearance_result: paResult,
+                previous_pitch_1: secondPitch,
+                previous_pitch_2: "changeup",
+                previous_result_1: "ball",
+                previous_speed_1: second.release_speed,
+                speed_change_from_previous: fixed(
+                  Number(second.release_speed) - 85,
+                ),
+                break_x_change_from_previous: fixed(7 - Number(second.break_x)),
+                break_z_change_from_previous: fixed(
+                  1.5 - Number(second.break_z),
+                ),
+                location_x_change_from_previous: fixed(
+                  Number(base.intended_plate_x) - Number(second.plate_x),
+                ),
+                location_z_change_from_previous: fixed(
+                  Number(base.intended_plate_z) - Number(second.plate_z),
+                ),
+              };
+              rows.push(first, second, target);
+            }
           }
         }
       }

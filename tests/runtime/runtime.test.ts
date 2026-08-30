@@ -30,9 +30,9 @@ describe("local runtime", () => {
     });
 
     expect(executed.diagnostics).toEqual([]);
-    expect(executed.result?.primary.matchedCount).toBe(720);
-    expect(executed.result?.baseline?.matchedCount).toBe(720);
-    expect(executed.result?.primary.observedRate).toBeCloseTo(1 / 3, 8);
+    expect(executed.result?.primary.matchedCount).toBe(4_320);
+    expect(executed.result?.baseline?.matchedCount).toBe(4_320);
+    expect(executed.result?.primary.observedRate).toBeCloseTo(0.353472, 6);
     expect(executed.result?.audit.trials).toBe(40_000);
     expect(executed.result?.difference?.simulated).toBeGreaterThan(0.08);
     expect(executed.result?.examples).toHaveLength(5);

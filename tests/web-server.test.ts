@@ -68,6 +68,20 @@ describe("browser server", () => {
     expect(serialized).not.toContain("connection");
   });
 
+  it("serves synthetic player profiles for the playground", async () => {
+    const origin = await start();
+    const response = await fetch(`${origin}/api/playground-data`);
+    const body = (await response.json()) as {
+      pitchers: readonly unknown[];
+      batters: readonly unknown[];
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.pitchers).toHaveLength(4);
+    expect(body.batters).toHaveLength(6);
+    expect(JSON.stringify(body)).not.toContain("seed");
+  });
+
   it("rejects an unknown action", async () => {
     const origin = await start();
     const response = await fetch(`${origin}/api/study`, {

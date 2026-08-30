@@ -85,9 +85,11 @@ Open `http://127.0.0.1:4173` after the last command.
 
 The studio includes a guided playground, code editor, language guide, resource catalog, and local run history.
 
+The playground shows synthetic pitcher and batter profiles. Each choice filters the generated study and its result.
+
 It saves drafts in the browser. It also supports light, dark, desktop, and mobile layouts.
 
-The demonstration uses 4,320 synthetic pitch records.
+The demonstration uses 25,920 synthetic pitch records.
 
 Do not use its result as baseball evidence.
 

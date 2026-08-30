@@ -62,6 +62,11 @@ test("opens the guide and trusted resource catalog", async ({
 test("runs an automatic simulation in the playground", async ({
   page,
 }, testInfo) => {
+  const browserErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => browserErrors.push(error.message));
   await page.goto("/");
   if (testInfo.project.name === "mobile") {
     await page.getByRole("button", { name: "Open navigation" }).click();
@@ -70,8 +75,25 @@ test("runs an automatic simulation in the playground", async ({
   await expect(
     page.getByRole("heading", { name: "Build a study without code" }),
   ).toBeVisible();
+  await page.getByLabel("Pitcher").selectOption("P100");
+  await page.getByLabel("Batter").selectOption("B100");
+  const matchup = page.locator("#matchup-visual");
+  await expect(matchup.getByText("Alex Morgan")).toBeVisible();
+  await expect(matchup.getByText("Taylor Kim")).toBeVisible();
+  await expect(
+    matchup.locator(".player-metrics").first().getByText("Slider"),
+  ).toBeVisible();
+  await expect(
+    matchup.locator(".player-metrics").last().getByText("Contact"),
+  ).toBeVisible();
   await expect(page.getByLabel("Generated SeamScript")).toContainText(
     "method: simulation",
+  );
+  await expect(page.getByLabel("Generated SeamScript")).toContainText(
+    "pitchers: P100",
+  );
+  await expect(page.getByLabel("Generated SeamScript")).toContainText(
+    "batters: B100",
   );
 
   await page.getByRole("button", { name: "Run playground" }).click();
@@ -86,14 +108,20 @@ test("runs an automatic simulation in the playground", async ({
     path: `output/playwright/playground-${testInfo.project.name}.png`,
     fullPage: true,
   });
+  const sizes = await page.evaluate(() => ({
+    width: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.scroll).toBeLessThanOrEqual(sizes.width + 1);
+  expect(browserErrors).toEqual([]);
 
   await result.getByRole("button", { name: "Review full evidence" }).click();
   await expect(page.getByLabel("SeamScript source")).toHaveValue(
-    /Fastball before slider for swing and miss/,
+    /Alex Morgan versus Taylor Kim: fastball before slider for swing and miss/,
   );
   await expect(
     page.getByRole("heading", {
-      name: "Fastball before slider for swing and miss",
+      name: "Alex Morgan versus Taylor Kim: fastball before slider for swing and miss",
     }),
   ).toBeVisible();
 });
@@ -102,12 +130,16 @@ test("runs changed playground choices with an approved model", async ({
   page,
 }) => {
   await page.goto("/#playground");
+  await page.getByLabel("Pitcher").selectOption("P400");
+  await page.getByLabel("Batter").selectOption("B105");
   await page.getByLabel("Target event").selectOption("contact");
   await page.getByLabel("Previous pitch").selectOption("curveball");
   await page.getByLabel("Lookback").selectOption("1");
   await page.getByLabel("Evidence method").selectOption("model");
   const generated = page.getByLabel("Generated SeamScript");
   await expect(generated).toContainText("outcome: contact");
+  await expect(generated).toContainText("pitchers: P400");
+  await expect(generated).toContainText("batters: B105");
   await expect(generated).toContainText("sequence: curveball");
   await expect(generated).toContainText("window: 1 pitch");
   await expect(generated).toContainText("method: model");
@@ -117,7 +149,9 @@ test("runs changed playground choices with an approved model", async ({
   await expect(result.getByText("model chance")).toBeVisible();
   await expect(result.getByText("matched records")).toBeVisible();
   await expect(
-    result.getByText("Curveball before slider for contact"),
+    result.getByText(
+      "Casey Brooks versus Avery Johnson: curveball before slider for contact",
+    ),
   ).toBeVisible();
 });
 
@@ -142,6 +176,7 @@ test("saves completed work in local history", async ({ page }, testInfo) => {
 test("keeps a saved draft after reload", async ({ page }) => {
   await page.goto("/");
   const editor = page.getByLabel("SeamScript source");
+  await expect(editor).toHaveValue(/Fastball before slider/);
   await editor.fill(
     (await editor.inputValue()).replace(
       "Fastball before slider",

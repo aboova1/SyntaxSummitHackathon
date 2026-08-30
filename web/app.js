@@ -527,34 +527,186 @@ element("#new-study").addEventListener("click", () => {
   showToast("New study ready.");
 });
 
+const playgroundPitcher = element("#playground-pitcher");
+const playgroundBatter = element("#playground-batter");
 const playgroundOutcome = element("#playground-outcome");
 const playgroundPrevious = element("#playground-previous");
 const playgroundWindow = element("#playground-window");
 const playgroundMethod = element("#playground-method");
 const playgroundPreview = element("#playground-source");
 const playgroundResult = element("#playground-result");
+const matchupVisual = element("#matchup-visual");
 let lastPlaygroundResponse;
+let playgroundData;
 
 const titleCase = (value) =>
   value.replace(/\b\w/g, (character) => character.toUpperCase());
+
+const playerInitials = (name) =>
+  name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const handLabel = (hand, role) => {
+  if (role === "pitcher") return hand === "left" ? "LHP" : "RHP";
+  if (hand === "switch") return "Switch hitter";
+  return hand === "left" ? "Bats left" : "Bats right";
+};
+
+const mixWidthClass = (share) =>
+  "w-" + Math.max(1, Math.min(20, Math.round(share * 20)));
+
+const updateMatchupVisual = () => {
+  if (!playgroundData) return;
+  const pitcher = playgroundData.pitchers.find(
+    (player) => player.id === playgroundPitcher.value,
+  );
+  const batter = playgroundData.batters.find(
+    (player) => player.id === playgroundBatter.value,
+  );
+  if (!pitcher || !batter) return;
+  const pitchMix = pitcher.pitchMix
+    .map(
+      (pitch) =>
+        '<div class="pitch-mix-row"><span>' +
+        escapeHtml(titleCase(pitch.pitch)) +
+        '</span><div class="pitch-mix-track"><span class="pitch-mix-fill ' +
+        mixWidthClass(pitch.share) +
+        '"></span></div><strong>' +
+        percent(pitch.share, 0) +
+        "</strong></div>",
+    )
+    .join("");
+  matchupVisual.innerHTML =
+    '<article class="matchup-card pitcher-card"><div class="player-head"><span class="player-avatar pitcher-avatar">' +
+    escapeHtml(playerInitials(pitcher.name)) +
+    "</span><div><span>Pitcher · " +
+    escapeHtml(pitcher.team) +
+    "</span><strong>" +
+    escapeHtml(pitcher.name) +
+    "</strong><small>" +
+    escapeHtml(handLabel(pitcher.hand, "pitcher")) +
+    " · " +
+    escapeHtml(pitcher.id) +
+    '</small></div></div><div class="player-metrics"><div><span>Slider mph</span><strong>' +
+    pitcher.sliderVelocity.toFixed(1) +
+    "</strong></div><div><span>Spin rpm</span><strong>" +
+    pitcher.sliderSpin.toLocaleString() +
+    "</strong></div><div><span>Whiff</span><strong>" +
+    percent(pitcher.sliderWhiffRate) +
+    '</strong></div></div><div class="pitch-mix"><span class="profile-label">Pitch mix</span>' +
+    pitchMix +
+    '</div><div class="profile-foot"><span>' +
+    pitcher.pitches.toLocaleString() +
+    " tracked pitches</span><span>Season whiff " +
+    percent(pitcher.seasonWhiffRate) +
+    '</span></div></article><div class="matchup-versus" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 4 36 20 20 36 4 20Z"></path><circle cx="20" cy="20" r="3"></circle></svg><span>VS</span></div><article class="matchup-card batter-card"><div class="player-head"><span class="player-avatar batter-avatar">' +
+    escapeHtml(playerInitials(batter.name)) +
+    "</span><div><span>Batter</span><strong>" +
+    escapeHtml(batter.name) +
+    "</strong><small>" +
+    escapeHtml(handLabel(batter.side, "batter")) +
+    " · " +
+    escapeHtml(batter.id) +
+    '</small></div></div><div class="player-metrics"><div><span>wOBA</span><strong>' +
+    batter.woba.toFixed(3).replace(/^0/, "") +
+    "</strong></div><div><span>Contact</span><strong>" +
+    percent(batter.contactRate) +
+    "</strong></div><div><span>Chase</span><strong>" +
+    percent(batter.chaseRate) +
+    '</strong></div></div><div class="profile-foot"><span>' +
+    batter.pitches.toLocaleString() +
+    " tracked pitches</span><span>" +
+    batter.plateAppearances.toLocaleString() +
+    " plate appearances</span><span>Pitch-type whiff " +
+    percent(batter.pitchTypeWhiffRate) +
+    "</span></div></article>";
+};
+
+const loadPlaygroundProfiles = async () => {
+  try {
+    const response = await fetch("/api/playground-data");
+    if (!response.ok) throw new Error("Profile request failed.");
+    playgroundData = await response.json();
+    playgroundPitcher.innerHTML = playgroundData.pitchers
+      .map(
+        (player) =>
+          '<option value="' +
+          escapeHtml(player.id) +
+          '">' +
+          escapeHtml(player.name + " · " + player.team) +
+          "</option>",
+      )
+      .join("");
+    playgroundBatter.innerHTML = playgroundData.batters
+      .map(
+        (player) =>
+          '<option value="' +
+          escapeHtml(player.id) +
+          '">' +
+          escapeHtml(player.name) +
+          "</option>",
+      )
+      .join("");
+    playgroundPitcher.disabled = false;
+    playgroundBatter.disabled = false;
+    playgroundPitcher.value = playgroundData.pitchers[0]?.id ?? "P100";
+    playgroundBatter.value = playgroundData.batters[0]?.id ?? "B100";
+    updatePlayground();
+  } catch {
+    playgroundPitcher.innerHTML = '<option value="P100">P100</option>';
+    playgroundBatter.innerHTML = '<option value="B100">B100</option>';
+    playgroundPitcher.disabled = false;
+    playgroundBatter.disabled = false;
+    matchupVisual.innerHTML =
+      "<span>Player profiles are not available. The study can still run.</span>";
+    updatePlayground();
+  }
+};
 
 const buildPlaygroundSource = () => {
   const previous = playgroundPrevious.value;
   const outcome = playgroundOutcome.value;
   const window = Number(playgroundWindow.value);
   const pitchWord = window === 1 ? "pitch" : "pitches";
+  const pitcher = playgroundData?.pitchers.find(
+    (player) => player.id === playgroundPitcher.value,
+  );
+  const batter = playgroundData?.batters.find(
+    (player) => player.id === playgroundBatter.value,
+  );
+  const pitcherName = pitcher?.name ?? playgroundPitcher.value ?? "P100";
+  const batterName = batter?.name ?? playgroundBatter.value ?? "B100";
+  const method = playgroundMethod.value;
+  const uses = [
+    ...(method === "model" || method === "simulation"
+      ? ["  model: approved demo outcome"]
+      : []),
+    "  comparison: matched comparison",
+    ...(method === "simulation" ? ["  simulation: adaptive simulation"] : []),
+  ];
   return [
-    "study: " + titleCase(previous) + " before slider for " + outcome,
+    "study: " +
+      pitcherName +
+      " versus " +
+      batterName +
+      ": " +
+      previous +
+      " before slider for " +
+      outcome,
     "",
     "data:",
     "  source: synthetic demo pitches",
     "  seasons: 2023 through 2025",
     "  games: regular season",
+    "  pitchers: " + (playgroundPitcher.value || "P100"),
+    "  batters: " + (playgroundBatter.value || "B100"),
     "",
     "use:",
-    "  model: approved demo outcome",
-    "  comparison: matched comparison",
-    "  simulation: adaptive simulation",
+    ...uses,
     "",
     "analyze:",
     "  target:",
@@ -572,7 +724,7 @@ const buildPlaygroundSource = () => {
     "  facts:",
     "    match: pitcher, count, batter side, season",
     "    account for: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense",
-    "  method: " + playgroundMethod.value,
+    "  method: " + method,
     "  report:",
     "    - zone map",
     "    - 5 examples",
@@ -586,6 +738,7 @@ const emptyPlaygroundResult = () => {
 };
 
 const updatePlayground = () => {
+  updateMatchupVisual();
   playgroundPreview.textContent = buildPlaygroundSource();
   lastPlaygroundResponse = undefined;
   emptyPlaygroundResult();
@@ -694,6 +847,8 @@ playgroundResult.addEventListener("click", (event) => {
   if (event.target.closest("#playground-review")) openPlaygroundInStudio();
 });
 element("#playground-reset").addEventListener("click", () => {
+  playgroundPitcher.value = playgroundData?.pitchers[0]?.id ?? "P100";
+  playgroundBatter.value = playgroundData?.batters[0]?.id ?? "B100";
   playgroundOutcome.value = "swing and miss";
   playgroundPrevious.value = "fastball";
   playgroundWindow.value = "2";
@@ -701,6 +856,8 @@ element("#playground-reset").addEventListener("click", () => {
   updatePlayground();
   showToast("Playground reset.");
 });
+
+loadPlaygroundProfiles();
 
 const renderHistory = () => {
   const runs = readStorage(HISTORY_KEY, []);

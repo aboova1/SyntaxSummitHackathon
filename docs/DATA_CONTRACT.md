@@ -71,7 +71,7 @@ The source must return an exact snapshot identifier.
 
 ## Demonstration data
 
-`data/sample-pitches.csv` contains 4,320 synthetic rows.
+`data/sample-pitches.csv` contains 25,920 synthetic rows.
 
 The generator is `scripts/generate-demo-data.ts`.
 

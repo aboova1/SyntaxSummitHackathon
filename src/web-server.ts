@@ -10,6 +10,7 @@ import { hasErrors } from "./compiler/diagnostic.js";
 import { parseCatalog } from "./catalog/load.js";
 import { executePlan } from "./runtime/execute.js";
 import { toPublicResult } from "./runtime/public-result.js";
+import { loadPlaygroundData } from "./playground-data.js";
 
 const BODY_LIMIT = 256 * 1024;
 
@@ -53,6 +54,7 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
   const webRoot = resolve(projectRoot, "web");
   const studyPath = resolve(projectRoot, "examples/demo.seam");
   const catalogPath = resolve(projectRoot, "examples/demo.catalog.yml");
+  const dataPath = resolve(projectRoot, "data/sample-pitches.csv");
 
   return createServer(async (request, response) => {
     try {
@@ -105,6 +107,11 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
             maximumHalfWidth: catalog.policy.maximum_half_width,
           },
         });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/playground-data") {
+        sendJson(response, 200, await loadPlaygroundData(dataPath));
         return;
       }
 

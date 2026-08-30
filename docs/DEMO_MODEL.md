@@ -24,11 +24,11 @@ Run the check with:
 npm run model:evaluate
 ```
 
-The current synthetic sample has 1,440 matched target pitches.
+The current synthetic sample has 8,640 matched target pitches.
 
-- Brier score: 0.2167
-- Log loss: 0.6251
-- Expected calibration error: 0.0395
+- Brier score: 0.2121
+- Log loss: 0.6147
+- Expected calibration error: 0.0134
 - Demonstration threshold: below 0.05
 
 This check passes the demonstration threshold.

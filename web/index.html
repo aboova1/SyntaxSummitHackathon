@@ -271,10 +271,21 @@
                   runs the full analysis.
                 </p>
               </div>
-              <div class="page-actions">
-                <span class="dot-label"
-                  ><span class="status-dot positive"></span>Ready to run</span
-                >
+              <div class="playground-graphic" aria-hidden="true">
+                <svg viewBox="0 0 220 105">
+                  <path class="field-line" d="M110 14 202 91H18Z" />
+                  <path class="field-line" d="M110 14v77M64 53h92" />
+                  <rect
+                    class="zone-line"
+                    x="91"
+                    y="44"
+                    width="38"
+                    height="46"
+                  />
+                  <path class="pitch-path" d="M36 77C71 12 142 20 181 59" />
+                  <circle class="pitch-ball" cx="181" cy="59" r="6" />
+                  <circle class="pitch-start" cx="36" cy="77" r="3" />
+                </svg>
               </div>
             </header>
 
@@ -289,6 +300,39 @@
 
                 <div class="form-section">
                   <span class="form-step">01</span>
+                  <div>
+                    <div class="form-fields">
+                      <label>
+                        <span>Pitcher</span>
+                        <select
+                          id="playground-pitcher"
+                          aria-label="Pitcher"
+                          disabled
+                        >
+                          <option value="">Loading pitchers…</option>
+                        </select>
+                        <small>The study uses this pitcher's records.</small>
+                      </label>
+                      <label>
+                        <span>Batter</span>
+                        <select
+                          id="playground-batter"
+                          aria-label="Batter"
+                          disabled
+                        >
+                          <option value="">Loading batters…</option>
+                        </select>
+                        <small>The study uses this batter's matchups.</small>
+                      </label>
+                    </div>
+                    <div class="matchup-visual" id="matchup-visual">
+                      <span>Loading synthetic player profiles…</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <span class="form-step">02</span>
                   <div class="form-fields">
                     <label>
                       <span>Target pitch</span>
@@ -315,7 +359,7 @@
                 </div>
 
                 <div class="form-section">
-                  <span class="form-step">02</span>
+                  <span class="form-step">03</span>
                   <div class="form-fields">
                     <label>
                       <span>Previous pitch</span>
@@ -341,7 +385,7 @@
                 </div>
 
                 <div class="form-section">
-                  <span class="form-step">03</span>
+                  <span class="form-step">04</span>
                   <div class="form-fields one-column">
                     <label>
                       <span>Evidence method</span>
