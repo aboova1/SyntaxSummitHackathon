@@ -83,6 +83,10 @@ npm run app
 
 Open `http://127.0.0.1:4173` after the last command.
 
+The studio includes the editor, language guide, resource catalog, and local run history.
+
+It saves drafts in the browser. It also supports light, dark, desktop, and mobile layouts.
+
 The demonstration uses 4,320 synthetic pitch records.
 
 Do not use its result as baseball evidence.

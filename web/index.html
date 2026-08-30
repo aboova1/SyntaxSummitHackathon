@@ -5,150 +5,411 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Compile and run readable baseball studies with SeamScript."
+      content="Write and run clear baseball studies with SeamScript."
     />
     <title>SeamScript Studio</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="SeamScript Studio home">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span><strong>SeamScript</strong><small>Studio</small></span>
-      </a>
-      <div class="data-state">
-        <span aria-hidden="true"></span>Synthetic demonstration data
-      </div>
-    </header>
-
-    <main>
-      <section class="hero">
-        <p class="eyebrow">A language for baseball decisions</p>
-        <h1>Describe the question.<br /><em>Get checked evidence.</em></h1>
-        <p class="hero-copy">
-          No SQL. No model training. Every fact, target, and tool stays visible.
-        </p>
-        <ol class="formula" aria-label="Study formula">
-          <li><span>01</span>Data</li>
-          <li><span>02</span>Target</li>
-          <li><span>03</span>Facts</li>
-          <li><span>04</span>Method</li>
-          <li><span>05</span>Evidence</li>
-        </ol>
-      </section>
-
-      <section class="studio" aria-label="SeamScript editor and result">
-        <div class="editor-pane">
-          <div class="pane-head">
+    <div class="app-shell">
+      <aside class="app-rail" id="app-rail" aria-label="Main navigation">
+        <div class="workspace-brand">
+          <span class="workspace-mark" aria-hidden="true">S</span>
+          <span><strong>SeamScript</strong><small>Decision studio</small></span>
+        </div>
+        <nav class="rail-nav">
+          <p class="nav-label">Workspace</p>
+          <button
+            class="nav-item nav-active"
+            data-view="studio"
+            aria-current="page"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 5h16v14H4zM8 9l3 3-3 3m5 0h3" />
+            </svg>
+            <span>Studio</span>
+          </button>
+          <button class="nav-item" data-view="guide">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Zm3 12h11M9 8h6"
+              />
+            </svg>
+            <span>Language guide</span>
+          </button>
+          <button class="nav-item" data-view="resources">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="6" rx="8" ry="3" />
+              <path
+                d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6m-16 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"
+              />
+            </svg>
+            <span>Resources</span>
+          </button>
+          <button class="nav-item" data-view="history">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6M12 8v5l3 2" />
+            </svg>
+            <span>History</span>
+          </button>
+          <div class="rail-note">
+            <span class="status-dot warning" aria-hidden="true"></span>
             <div>
-              <p class="pane-label">Study</p>
-              <h2>fastball-slider.seam</h2>
-            </div>
-            <div class="actions">
-              <button class="button quiet" data-action="check">Check</button>
-              <button class="button quiet" data-action="compile">
-                Compile
-              </button>
-              <button class="button primary" data-action="run">
-                <span aria-hidden="true">▶</span> Run study
-              </button>
+              <strong>Demonstration mode</strong
+              ><small>Synthetic pitch data</small>
             </div>
           </div>
-          <div class="editor-wrap">
-            <pre
-              class="line-numbers"
-              id="line-numbers"
-              aria-hidden="true"
-            ></pre>
-            <textarea
-              id="source"
-              aria-label="SeamScript source"
-              spellcheck="false"
-            ></textarea>
-          </div>
-          <div class="status-bar">
-            <span id="source-status">Loading example…</span
-            ><span>SeamScript 0.2</span>
+        </nav>
+        <div class="rail-footer">
+          <button
+            class="rail-action"
+            id="theme-toggle"
+            aria-label="Use dark theme"
+          >
+            <svg class="moon-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M20 15.5A8 8 0 1 1 8.5 4 6.5 6.5 0 0 0 20 15.5Z" />
+            </svg>
+            <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+              />
+            </svg>
+            <span>Theme</span>
+          </button>
+          <div class="rail-version">
+            <span>v0.2</span><span>Local studio</span>
           </div>
         </div>
-
-        <div class="result-pane">
-          <div class="tabs" role="tablist" aria-label="Output form">
-            <button
-              class="tab active"
-              role="tab"
-              data-tab="evidence"
-              aria-selected="true"
+      </aside>
+      <div class="mobile-overlay" id="mobile-overlay"></div>
+      <section class="app-main">
+        <header class="mobile-topbar">
+          <button
+            class="icon-button"
+            id="menu-button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <span
+            ><span class="workspace-mark">S</span
+            ><strong>SeamScript</strong></span
+          >
+          <span class="status-dot warning" aria-label="Synthetic data"></span>
+        </header>
+        <main class="content-scroll" id="main-content">
+          <section class="page studio-page view-active" data-page="studio">
+            <header class="page-header">
+              <div>
+                <p class="eyebrow">Decision workspace</p>
+                <h1>Pitch sequence study</h1>
+                <p class="page-description">
+                  Write one clear question. SeamScript checks each input before
+                  it runs.
+                </p>
+              </div>
+              <div class="page-actions">
+                <button class="button" id="new-study">New study</button>
+                <button class="button" id="save-study">Save draft</button>
+              </div>
+            </header>
+            <section
+              class="study-shell"
+              aria-label="SeamScript editor and result"
             >
-              Evidence
-            </button>
-            <button
-              class="tab"
-              role="tab"
-              data-tab="plan"
-              aria-selected="false"
-            >
-              Plan
-            </button>
-            <button class="tab" role="tab" data-tab="sql" aria-selected="false">
-              SQL
-            </button>
-            <button
-              class="tab"
-              role="tab"
-              data-tab="diagnostics"
-              aria-selected="false"
-            >
-              Checks <span id="check-count">0</span>
-            </button>
-          </div>
-          <div id="panel-evidence" class="panel active" role="tabpanel">
-            <div class="empty-state" id="empty-state">
-              <div class="ball" aria-hidden="true"></div>
-              <h2>Ready to test the question</h2>
-              <p>Run the study to measure the target event.</p>
+              <div class="study-topbar">
+                <div class="file-identity">
+                  <span class="file-icon" aria-hidden="true">S</span>
+                  <div>
+                    <strong id="study-file">fastball-before-slider.seam</strong
+                    ><small id="save-state">Example study</small>
+                  </div>
+                </div>
+                <div class="study-actions">
+                  <button class="button" data-action="check">Check</button>
+                  <button class="button" data-action="compile">Compile</button>
+                  <button class="button button-primary" data-action="run">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="m9 7 8 5-8 5V7Z" />
+                    </svg>
+                    Run study
+                  </button>
+                </div>
+              </div>
+              <div class="study-workspace">
+                <section class="editor-pane" aria-label="Study source">
+                  <div class="editor-head">
+                    <span>Study</span>
+                    <span class="shortcut"><kbd>⌘</kbd><kbd>↵</kbd> Run</span>
+                  </div>
+                  <div class="editor-wrap">
+                    <pre
+                      class="line-numbers"
+                      id="line-numbers"
+                      aria-hidden="true"
+                    ></pre>
+                    <textarea
+                      id="source"
+                      aria-label="SeamScript source"
+                      spellcheck="false"
+                    ></textarea>
+                  </div>
+                  <div class="status-bar">
+                    <span id="source-status">Loading example…</span>
+                    <span id="cursor-status">Line 1, column 1</span>
+                  </div>
+                </section>
+                <section class="result-pane" aria-label="Study output">
+                  <div class="tabs" role="tablist" aria-label="Output view">
+                    <button
+                      class="tab active"
+                      role="tab"
+                      data-tab="evidence"
+                      aria-selected="true"
+                    >
+                      Evidence
+                    </button>
+                    <button
+                      class="tab"
+                      role="tab"
+                      data-tab="plan"
+                      aria-selected="false"
+                    >
+                      Plan
+                    </button>
+                    <button
+                      class="tab"
+                      role="tab"
+                      data-tab="sql"
+                      aria-selected="false"
+                    >
+                      SQL
+                    </button>
+                    <button
+                      class="tab"
+                      role="tab"
+                      data-tab="diagnostics"
+                      aria-selected="false"
+                    >
+                      Checks <span id="check-count">0</span>
+                    </button>
+                  </div>
+                  <div id="panel-evidence" class="panel active" role="tabpanel">
+                    <div class="empty-state" id="empty-state">
+                      <span class="empty-mark" aria-hidden="true"
+                        ><svg viewBox="0 0 24 24">
+                          <path d="M5 19 19 5M7 5h12v12M5 12v7h7" /></svg
+                      ></span>
+                      <h2>Ready to run</h2>
+                      <p>
+                        The result will show the target chance and comparison.
+                      </p>
+                      <button class="text-button" data-action="run">
+                        Run the example
+                      </button>
+                    </div>
+                    <div id="evidence" hidden></div>
+                  </div>
+                  <div id="panel-plan" class="panel" role="tabpanel">
+                    <div id="plan" class="panel-empty">
+                      Compile the study to build its plan.
+                    </div>
+                  </div>
+                  <div id="panel-sql" class="panel" role="tabpanel">
+                    <pre id="sql">Compile the study to inspect its SQL.</pre>
+                  </div>
+                  <div id="panel-diagnostics" class="panel" role="tabpanel">
+                    <div id="diagnostics" class="panel-empty">
+                      Check the study to inspect its rules.
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </section>
+            <section class="workflow-line" aria-label="Study process">
+              <div>
+                <span>01</span><strong>Data</strong
+                ><small>Select a trusted source.</small>
+              </div>
+              <div>
+                <span>02</span><strong>Target</strong
+                ><small>Name the event to estimate.</small>
+              </div>
+              <div>
+                <span>03</span><strong>Facts</strong
+                ><small>Use known game facts.</small>
+              </div>
+              <div>
+                <span>04</span><strong>Method</strong
+                ><small>Use approved analysis.</small>
+              </div>
+              <div>
+                <span>05</span><strong>Evidence</strong
+                ><small>Review limits and records.</small>
+              </div>
+            </section>
+          </section>
+          <section class="page narrow-page" data-page="guide" hidden>
+            <header class="page-header">
+              <div>
+                <p class="eyebrow">Language guide</p>
+                <h1>One form. One meaning.</h1>
+                <p class="page-description">
+                  Each block has one job. Indentation shows which details belong
+                  together.
+                </p>
+              </div>
+            </header>
+            <section class="guide-section">
+              <div class="section-heading">
+                <div>
+                  <h2>Study formula</h2>
+                  <p>Use these blocks in this order.</p>
+                </div>
+              </div>
+              <ol class="syntax-list">
+                <li>
+                  <span>study</span>
+                  <div>
+                    <strong>Name the question</strong>
+                    <p>Use a short title that describes the decision.</p>
+                  </div>
+                  <code>study: Fastball before slider</code>
+                </li>
+                <li>
+                  <span>data</span>
+                  <div>
+                    <strong>Select the records</strong>
+                    <p>Name the source, seasons, and games.</p>
+                  </div>
+                  <code>source: team pitch warehouse</code>
+                </li>
+                <li>
+                  <span>use</span>
+                  <div>
+                    <strong>Select approved tools</strong>
+                    <p>Name a model, comparison, or simulation.</p>
+                  </div>
+                  <code>model: approved outcome model</code>
+                </li>
+                <li>
+                  <span>target</span>
+                  <div>
+                    <strong>Name what to estimate</strong>
+                    <p>The target is never a fact.</p>
+                  </div>
+                  <code>outcome: swing and miss</code>
+                </li>
+                <li>
+                  <span>when</span>
+                  <div>
+                    <strong>Define the main condition</strong>
+                    <p>State the sequence that you want to test.</p>
+                  </div>
+                  <code>sequence: fastball</code>
+                </li>
+                <li>
+                  <span>versus</span>
+                  <div>
+                    <strong>Define the baseline</strong>
+                    <p>Change only the condition under review.</p>
+                  </div>
+                  <code>exclude: fastball</code>
+                </li>
+                <li>
+                  <span>facts</span>
+                  <div>
+                    <strong>Control known differences</strong>
+                    <p>Only use facts known before the target pitch.</p>
+                  </div>
+                  <code>match: pitcher, count, batter side</code>
+                </li>
+                <li>
+                  <span>method</span>
+                  <div>
+                    <strong>Select the result type</strong>
+                    <p>Simulation estimates an event chance automatically.</p>
+                  </div>
+                  <code>method: simulation</code>
+                </li>
+              </ol>
+            </section>
+            <section class="guide-section section-line">
+              <div class="section-heading">
+                <div>
+                  <h2>Key distinction</h2>
+                  <p>The target states the answer. Facts state the inputs.</p>
+                </div>
+              </div>
+              <div class="meaning-grid">
+                <article>
+                  <code>target</code>
+                  <h3>Predicted event</h3>
+                  <p>Example: a swing and miss on this slider.</p>
+                </article>
+                <article>
+                  <code>when · versus</code>
+                  <h3>Compared conditions</h3>
+                  <p>Example: a prior fastball against no prior fastball.</p>
+                </article>
+                <article>
+                  <code>facts</code>
+                  <h3>Known inputs</h3>
+                  <p>Example: count, batter side, and pitch shape.</p>
+                </article>
+              </div>
+            </section>
+          </section>
+          <section class="page narrow-page" data-page="resources" hidden>
+            <header class="page-header">
+              <div>
+                <p class="eyebrow">Trusted resources</p>
+                <h1>Data and methods</h1>
+                <p class="page-description">
+                  The catalog connects studies to approved local or remote
+                  resources.
+                </p>
+              </div>
+              <div class="page-actions">
+                <span class="dot-label"
+                  ><span class="status-dot positive"></span>Catalog ready</span
+                >
+              </div>
+            </header>
+            <div id="resource-content" class="resource-content">
+              <div class="loading-row">Loading resource catalog…</div>
             </div>
-            <div id="evidence" hidden></div>
-          </div>
-          <div id="panel-plan" class="panel" role="tabpanel">
-            <div id="plan"></div>
-          </div>
-          <div id="panel-sql" class="panel" role="tabpanel">
-            <pre id="sql"></pre>
-          </div>
-          <div id="panel-diagnostics" class="panel" role="tabpanel">
-            <div id="diagnostics"></div>
-          </div>
-        </div>
+          </section>
+          <section class="page narrow-page" data-page="history" hidden>
+            <header class="page-header">
+              <div>
+                <p class="eyebrow">Local history</p>
+                <h1>Saved work</h1>
+                <p class="page-description">
+                  This browser stores drafts and completed runs. It does not
+                  store protected controls.
+                </p>
+              </div>
+              <div class="page-actions">
+                <button class="button" id="clear-history">Clear history</button>
+              </div>
+            </header>
+            <div id="history-content" class="history-content"></div>
+          </section>
+        </main>
+        <div
+          class="toast"
+          id="toast"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
       </section>
-
-      <section class="meaning">
-        <p class="eyebrow">One form. One meaning.</p>
-        <h2>The language separates the result from its inputs.</h2>
-        <div class="meaning-grid">
-          <article>
-            <span class="keyword">target</span>
-            <h3>What to estimate</h3>
-            <p>The pitch, outcome, and time limit form one clear target.</p>
-          </article>
-          <article>
-            <span class="keyword">when · versus</span>
-            <h3>What to compare</h3>
-            <p>The primary condition and baseline use the same target.</p>
-          </article>
-          <article>
-            <span class="keyword">facts</span>
-            <h3>What to account for</h3>
-            <p>Only facts known before the pitch can enter the model.</p>
-          </article>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <span>Built for Syntax Summit 2026</span
-      ><span>Compiler · Runtime · Audit</span>
-    </footer>
+    </div>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

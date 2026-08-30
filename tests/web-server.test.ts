@@ -55,6 +55,19 @@ describe("browser server", () => {
     expect(serialized).not.toContain("seed");
   });
 
+  it("lists safe resource facts without protected controls", async () => {
+    const origin = await start();
+    const response = await fetch(`${origin}/api/meta`);
+    const serialized = JSON.stringify(await response.json());
+
+    expect(response.status).toBe(200);
+    expect(serialized).toContain("approved demo outcome");
+    expect(serialized).toContain("matched comparison");
+    expect(serialized).not.toContain("seed");
+    expect(serialized).not.toContain("object");
+    expect(serialized).not.toContain("connection");
+  });
+
   it("rejects an unknown action", async () => {
     const origin = await start();
     const response = await fetch(`${origin}/api/study`, {

@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { compileProject } from "./compiler/project.js";
 import { hasErrors } from "./compiler/diagnostic.js";
+import { parseCatalog } from "./catalog/load.js";
 import { executePlan } from "./runtime/execute.js";
 import { toPublicResult } from "./runtime/public-result.js";
 
@@ -63,6 +64,47 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
 
       if (request.method === "GET" && url.pathname === "/api/example") {
         sendJson(response, 200, { source: await readFile(studyPath, "utf8") });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/meta") {
+        const loaded = parseCatalog(await readFile(catalogPath, "utf8"));
+        if (!loaded.catalog) {
+          sendJson(response, 500, { diagnostics: loaded.diagnostics });
+          return;
+        }
+        const catalog = loaded.catalog;
+        sendJson(response, 200, {
+          language: { name: "SeamScript", version: "0.2" },
+          catalog: { name: catalog.catalog, version: catalog.version },
+          data: Object.entries(catalog.data).map(([name, item]) => ({
+            name,
+            connector: item.connector,
+            contract: item.contract,
+            access: item.access,
+          })),
+          models: Object.entries(catalog.models).map(([name, item]) => ({
+            name,
+            connector: item.serving.connector,
+            version: item.registry.version ?? item.registry.alias ?? "managed",
+            status: item.require?.status ?? "available",
+            calibration: item.require?.calibration ?? "not required",
+          })),
+          algorithms: Object.entries(catalog.algorithms).map(
+            ([name, item]) => ({
+              name,
+              connector: item.connector,
+              operation: item.operation,
+              release: item.release,
+            }),
+          ),
+          policy: {
+            minimumGroupSize: catalog.policy.minimum_group_size,
+            initialTrials: catalog.policy.initial_trials,
+            maximumTrials: catalog.policy.maximum_trials,
+            maximumHalfWidth: catalog.policy.maximum_half_width,
+          },
+        });
         return;
       }
 
