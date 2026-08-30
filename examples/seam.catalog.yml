@@ -1,0 +1,52 @@
+catalog: team baseball
+version: 1
+
+defaults:
+  data: team pitches
+  model:
+    outcomes: approved pitch outcome
+  algorithm:
+    comparison: matched comparison
+    simulation: plate appearance simulator
+
+data:
+  team pitches:
+    connector: flight sql
+    connection: team warehouse
+    object: baseball.analytics.statcast_pitches
+    contract: seam.pitch.v1
+    access: read only
+
+models:
+  approved pitch outcome:
+    registry:
+      connector: mlflow
+      connection: team model registry
+      name: pitch-outcome
+      alias: champion
+    serving:
+      connector: kserve v2
+      connection: team model gateway
+      name: pitch-outcome
+    input: seam.pitch.features.v1
+    output: seam.pitch.outcomes.v1
+    require:
+      status: approved
+      calibration: passed
+
+algorithms:
+  matched comparison:
+    connector: openapi
+    connection: team analytics gateway
+    operation: comparePitchSequences
+    release: 3.2.1
+    input: seam.comparison.request.v1
+    output: seam.comparison.result.v1
+
+  plate appearance simulator:
+    connector: openapi
+    connection: team analytics gateway
+    operation: simulatePlateAppearance
+    release: 2.4.0
+    input: seam.simulation.request.v1
+    output: seam.simulation.result.v1

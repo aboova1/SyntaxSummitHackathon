@@ -1,0 +1,4 @@
+research/**/report-preview.png
+research/**/report-failure.png
+.DS_Store
+output/playwright/

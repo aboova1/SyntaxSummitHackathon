@@ -1,0 +1,37 @@
+study: Does a fastball set up a slider?
+
+use:
+  data: team pitches
+  model:
+    outcomes: approved pitch outcome
+  algorithm:
+    comparison: matched comparison
+    simulation: plate appearance simulator
+  on unavailable: stop
+
+data:
+  seasons: 2023 through 2025
+  games: regular season
+
+sequence:
+  - fastball
+  - slider within 2 pitches
+
+compare:
+  against: slider without fastball within 2 pitches before it
+  match: pitcher, count, batter side, season
+  minimum: 100 sliders per pitcher in each group
+
+estimate:
+  event: swing and miss on the slider
+  method: simulation
+  horizon: this pitch
+
+show:
+  - observed rates
+  - simulated chance
+  - difference
+  - uncertainty range
+  - strike-zone map
+  - 5 example plate appearances
+  - calculation details

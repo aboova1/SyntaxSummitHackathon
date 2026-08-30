@@ -1,0 +1,517 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "SeamScript: Pitch Sequencing Research and Product Design",
+    "description": "A current research review and a precise plan for a controlled-English baseball analysis language.",
+    "generatedAt": "2026-08-30T20:44:20Z",
+    "cards": [],
+    "charts": [
+      {
+        "id": "counterfactual_model_metrics",
+        "title": "Published 2025 test results for one pitch-outcome Transformer",
+        "subtitle": "The study reports discrimination metrics. It does not report probability calibration.",
+        "type": "horizontalBar",
+        "dataset": "counterfactual_model_metrics",
+        "sourceId": "counterfactual_2026",
+        "encodings": {
+          "x": { "field": "metric", "type": "nominal", "label": "Metric" },
+          "y": { "field": "score", "type": "quantitative", "format": "percent", "label": "Score" }
+        },
+        "xAxisTitle": "Metric",
+        "yAxisTitle": "Score",
+        "valueFormat": "percent",
+        "intent": "Show the reported test metrics without treating them as probability accuracy.",
+        "question": "How well did the recent model separate swing-outs from balls in play?",
+        "rationale": "The chart uses one study. This avoids invalid comparisons across different tasks."
+      }
+    ],
+    "tables": [
+      {
+        "id": "capability_priority",
+        "title": "SeamScript capability order",
+        "subtitle": "The first release favors clear evidence, short simulations, and safe claims.",
+        "dataset": "capability_priority",
+        "sourceId": "research_synthesis",
+        "density": "comfortable",
+        "columns": [
+          { "field": "order", "label": "Order", "type": "number", "align": "right" },
+          { "field": "capability", "label": "Capability", "type": "text" },
+          { "field": "release", "label": "Release", "type": "text" },
+          { "field": "reason", "label": "Reason", "type": "text" },
+          { "field": "guardrail", "label": "Guardrail", "type": "text" }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "syntax_summit",
+        "label": "Syntax Summit challenge",
+        "href": "https://syntax-summit.devpost.com/",
+        "query": {
+          "engine": "web review",
+          "description": "Challenge purpose, required work, prizes, and judging criteria.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "statcast",
+        "label": "MLB Statcast glossary",
+        "href": "https://www.mlb.com/glossary/statcast",
+        "query": {
+          "engine": "web review",
+          "description": "Official tracking scope and hardware-era details.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "statcast_csv",
+        "label": "Statcast CSV documentation",
+        "href": "https://baseballsavant.mlb.com/csv-docs",
+        "query": {
+          "engine": "web review",
+          "description": "Official public field definitions for pitch-level data.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "counterfactual_2026",
+        "label": "Counterfactual Optimization of Baseball Pitch Sequences",
+        "href": "https://arxiv.org/pdf/2606.17345",
+        "query": {
+          "engine": "paper review",
+          "description": "Recent Transformer study of final and setup pitch scenarios.",
+          "language": "sql",
+          "sql": "SELECT * FROM (VALUES ('Accuracy', 0.756), ('Precision', 0.755), ('Recall', 0.879), ('F1', 0.812), ('ROC AUC', 0.811)) AS model_metrics(metric, score)",
+          "executed_at": "2026-08-30T20:22:27Z",
+          "filters": [
+            "Reviewed methods, test design, metrics, counterfactual method, and stated limits."
+          ]
+        }
+      },
+      {
+        "id": "world_model_2026",
+        "label": "Neural Sabermetrics with World Model",
+        "href": "https://arxiv.org/pdf/2602.07030",
+        "query": {
+          "engine": "paper review",
+          "description": "Recent LLM study of next-pitch and swing prediction.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "motifs_2026",
+        "label": "Structure of Pitch-Pattern Motifs in Major League Baseball",
+        "href": "https://arxiv.org/pdf/2601.11904",
+        "query": {
+          "engine": "paper review",
+          "description": "Recent motif study using Statcast records from 2008 through 2025.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "healey_2017",
+        "label": "Pitch predictability and strikeout rate",
+        "href": "https://journals.sagepub.com/doi/full/10.3233/JSA-170103",
+        "query": {
+          "engine": "paper review",
+          "description": "Peer-reviewed study of pitch-to-pitch speed, movement, and location correlations.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "prasad_2021",
+        "label": "Decoding MLB Pitch Sequencing Strategies",
+        "href": "https://assets-global.website-files.com/5f1af76ed86d6771ad48324b/606e515d0e2589d01b6946ba_ArnavPrasad-DecodingMLB-RPpaper.pdf",
+        "query": {
+          "engine": "paper review",
+          "description": "Graph-embedding study of sequence structure and setup patterns.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "nakahara_2022",
+        "label": "Pitching strategy evaluation with propensity scores",
+        "href": "https://arxiv.org/abs/2208.03492",
+        "query": {
+          "engine": "paper review",
+          "description": "Causal study that separates intended location from actual location.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "plate_discipline_2023",
+        "label": "Evaluating plate discipline with Bayesian trees",
+        "href": "https://arxiv.org/abs/2305.05752",
+        "query": {
+          "engine": "paper review",
+          "description": "Bayesian decomposition of take, swing, contact, and run-value choices.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "optimal_strategy_2021",
+        "label": "Computing an Optimal Pitching Strategy in a Baseball At-Bat",
+        "href": "https://arxiv.org/abs/2110.04321",
+        "query": {
+          "engine": "paper review",
+          "description": "Stochastic-game model of pitcher and batter actions.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "pitch_timer_2023",
+        "label": "Official 2023 MLB rule changes",
+        "href": "https://www.mlb.com/rule-changes-2023/",
+        "query": {
+          "engine": "web review",
+          "description": "Official pitch-timer and related rule changes.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "bat_tracking_2024",
+        "label": "Official Statcast bat-tracking release",
+        "href": "https://www.mlb.com/news/what-you-need-to-know-about-statcast-bat-tracking",
+        "query": {
+          "engine": "web review",
+          "description": "Official public availability date and bat-tracking scope.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "abs_2026",
+        "label": "Official 2026 ABS Challenge announcement",
+        "href": "https://www.mlb.com/press-release/press-release-mlb-announces-abs-challenge-system-coming-to-the-major-leagues-beginning-in-the-2026-season",
+        "query": {
+          "engine": "web review",
+          "description": "Official 2026 ball-strike challenge rules and strike-zone definition.",
+          "executed_at": "2026-08-30T20:22:27Z"
+        }
+      },
+      {
+        "id": "game_plan_role_2020",
+        "label": "Rockies data and game-plan coordinator",
+        "href": "https://www.mlb.com/news/rockies-add-data-and-game-plan-coordinator",
+        "query": {
+          "engine": "workflow review",
+          "description": "Team role that links research, coaches, and players.",
+          "executed_at": "2026-08-30T20:40:30Z"
+        }
+      },
+      {
+        "id": "catcher_prep_2021",
+        "label": "Catcher game preparation",
+        "href": "https://www.mlb.com/news/featured/catching-up-with-tim-cossins",
+        "query": {
+          "engine": "workflow review",
+          "description": "Catcher study, game plans, pitch calling, and player development.",
+          "executed_at": "2026-08-30T20:40:30Z"
+        }
+      },
+      {
+        "id": "pitchcom_2023",
+        "label": "Pitchers and PitchCom",
+        "href": "https://www.mlb.com/news/mlb-pitchers-pitchcom-transmitters-2023-update",
+        "query": {
+          "engine": "workflow review",
+          "description": "Official report that pitchers and catchers can call pitches.",
+          "executed_at": "2026-08-30T20:40:30Z"
+        }
+      },
+      {
+        "id": "mound_visit_current",
+        "label": "MLB mound-visit rule",
+        "href": "https://www.mlb.com/glossary/rules/mound-visit",
+        "query": {
+          "engine": "rules review",
+          "description": "Current mound-visit time and count limits.",
+          "executed_at": "2026-08-30T20:40:30Z"
+        }
+      },
+      {
+        "id": "dugout_pitch_calls_2026",
+        "label": "2026 coach pitch-calling test",
+        "href": "https://www.mlb.com/news/rockies-call-pitches-from-dugout-2026-spring-training",
+        "query": {
+          "engine": "workflow review",
+          "description": "Current test of coach-led pitch calls from the dugout.",
+          "executed_at": "2026-08-30T20:40:30Z"
+        }
+      },
+      {
+        "id": "yaml_2021",
+        "label": "YAML 1.2.2 specification",
+        "href": "https://yaml.org/spec/1.2.2/",
+        "query": {
+          "engine": "standards review",
+          "description": "Readable indentation and key-value structure.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "commonmark_2024",
+        "label": "CommonMark 0.31.2 specification",
+        "href": "https://spec.commonmark.org/spec",
+        "query": {
+          "engine": "standards review",
+          "description": "Readable plain-text lists and comments.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "json_2017",
+        "label": "JSON RFC 8259",
+        "href": "https://www.rfc-editor.org/info/rfc8259/",
+        "query": {
+          "engine": "standards review",
+          "description": "Small and portable structured data model.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "json_schema_2020",
+        "label": "JSON Schema 2020-12",
+        "href": "https://json-schema.org/draft/2020-12",
+        "query": {
+          "engine": "standards review",
+          "description": "Strict request and response contract checks.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "flight_sql",
+        "label": "Apache Arrow Flight SQL",
+        "href": "https://arrow.apache.org/docs/format/FlightSql.html",
+        "query": {
+          "engine": "standards review",
+          "description": "Remote SQL metadata, query, and data transfer protocol.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "kserve_v2",
+        "label": "KServe V2 inference protocol",
+        "href": "https://kserve.github.io/website/docs/concepts/architecture/data-plane/v2-protocol",
+        "query": {
+          "engine": "standards review",
+          "description": "Remote model health, metadata, and inference operations.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "openapi_2025",
+        "label": "OpenAPI 3.2.0 specification",
+        "href": "https://spec.openapis.org/oas/latest.html",
+        "query": {
+          "engine": "standards review",
+          "description": "Language-independent contracts for remote algorithms.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "mlflow_registry",
+        "label": "MLflow model registry aliases",
+        "href": "https://mlflow.org/docs/latest/ml/model-registry/workflow",
+        "query": {
+          "engine": "standards review",
+          "description": "Model aliases, versions, and deployment workflow.",
+          "executed_at": "2026-08-30T20:36:46Z"
+        }
+      },
+      {
+        "id": "research_synthesis",
+        "label": "SeamScript research synthesis",
+        "query": {
+          "engine": "manual evidence synthesis",
+          "description": "Capability order derived from the named official sources and research papers.",
+          "language": "sql",
+          "sql": "SELECT order_id AS order, capability, release, reason, guardrail FROM reviewed_capability_priority ORDER BY order_id",
+          "executed_at": "2026-08-30T20:22:27Z",
+          "tables_used": [
+            "reviewed_capability_priority"
+          ],
+          "filters": [
+            "Prioritized public data, recent evidence, clear validation, and hackathon delivery value.",
+            "Separated observed association, prediction, simulation, and causal claims.",
+            "Did not compare accuracy values across different prediction tasks."
+          ],
+          "metric_definitions": [
+            "Release now means required for the first working demonstration.",
+            "Release next means useful after the first release passes its checks.",
+            "Defer means too risky or too large for the first release."
+          ]
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title_block",
+        "type": "markdown",
+        "body": "# SeamScript: Pitch Sequencing Research and Product Design\n\nResearch current through August 30, 2026."
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "body": "## Technical summary\n\nBuild SeamScript as a controlled language for pitch-sequence questions.\n\nThe first release joins four tasks. It finds sequences, builds fair comparisons, estimates chances, and explains uncertainty.\n\nA study can use approved remote data, models, and algorithms. It does not train an untested replacement.\n\nThe strongest product claim is access. A coach can write a precise study without Python or SQL.\n\nThe safest analysis claim is predictive. SeamScript must not call an observed difference a causal effect.\n\nThe language fits the challenge well. It shows new syntax, a real interpreter, and a useful demonstration. [Challenge details](https://syntax-summit.devpost.com/)"
+      },
+      {
+        "id": "target_users",
+        "type": "markdown",
+        "body": "## Target users and product order\n\n### 1. Pregame game-plan coordinator\n\nThis user prepares pitcher plans for an opponent or series. This is the best first target.\n\nThe workflow has a clear decision and allows human review. Public Statcast can support the demonstration.\n\nTeam data can add intended locations, call sources, scouting tags, and current pitcher availability.\n\n[MLB game-plan role](https://www.mlb.com/news/rockies-add-data-and-game-plan-coordinator) [Catcher preparation](https://www.mlb.com/news/featured/catching-up-with-tim-cossins)\n\n### 2. Catching coordinator or catcher scout\n\nThis user reviews pitch-selection decisions. The system must separate a call from pitch execution and framing.\n\nPublic Statcast does not identify who called a pitch. Pitchers can also call pitches with PitchCom.\n\nA catcher-quality claim needs private call-source and intended-location data. Without it, show observed sequence quality only.\n\n[PitchCom rules](https://www.mlb.com/news/mlb-pitchers-pitchcom-transmitters-2023-update)\n\n### 3. In-game pitching coach or manager\n\nThis user needs three ranked options during a mound visit or inning break.\n\nMLB limits mound visits to 30 seconds. The answer must use preloaded data and return within one second.\n\nCall each result a `recommended option`. Do not call it an `optimal pitch`.\n\nThis workflow follows the pregame release. It has higher time pressure and more hidden context.\n\n[MLB mound visits](https://www.mlb.com/glossary/rules/mound-visit) [2026 dugout pitch calls](https://www.mlb.com/news/rockies-call-pitches-from-dugout-2026-spring-training)"
+      },
+      {
+        "id": "key_findings",
+        "type": "markdown",
+        "body": "## Key findings\n\n### 1. Sequence structure is real, but sequence names alone explain little.\n\nA 2026 study found stable pitch motifs in 12.4 million records. Those motifs did not clearly explain ERA, wins, hits, or outs. [Motif study](https://arxiv.org/pdf/2601.11904)\n\n### 2. Physical differences carry useful sequence information.\n\nEarlier work linked lower predictability in speed and movement with higher strikeout rates. It omitted count, inning, and detailed off-speed quality. [Predictability study](https://journals.sagepub.com/doi/full/10.3233/JSA-170103)\n\n### 3. Context must be part of every comparison.\n\nPitch choice depends on count, batter, game state, and pitcher skill. Public data also lacks the catcher’s intended target. [Propensity-score study](https://arxiv.org/abs/2208.03492)\n\n### 4. Recent models support short prediction tasks. They do not prove optimal strategy.\n\nA 2026 Transformer separated swing-outs from balls in play with 0.811 ROC AUC. The paper warned that season gains can be high. [Counterfactual study](https://arxiv.org/pdf/2606.17345)\n\n### 5. Large world models add cost before they add clear value.\n\nA 2026 model reported 0.722 F1. Its RNN baseline reported 0.720 F1 for the same binary task. [World-model study](https://arxiv.org/pdf/2602.07030)\n\nThat paper also gives conflicting next-pitch accuracy values. Its abstract states 64 percent. Its results section states 84 percent.\n\n### 6. Long simulations increase error.\n\nThe world-model study found fast error growth across longer sequences. It also found bias toward common fastballs.\n\n### 7. Player-pair models lack enough public data.\n\nThe motif study found about 23 shared pitches for an average pitcher-batter pair. Use partial pooling, not isolated pair models."
+      },
+      {
+        "id": "model_chart_block",
+        "type": "chart",
+        "chartId": "counterfactual_model_metrics"
+      },
+      {
+        "id": "chart_interpretation",
+        "type": "markdown",
+        "sourceId": "counterfactual_2026",
+        "body": "## How to read the model scores\n\nThe study used a 2025 time test. It trained on 2018 through 2024, without 2020.\n\nThe data had 100,669 plate appearances from 265 pitchers. The model used six pitches and seven physical values per pitch.\n\nThese scores show separation and classification quality. They do not show that a 30 percent chance occurs 30 percent of the time.\n\nThe paper gives no calibration test. SeamScript must add Brier score, log loss, and reliability plots."
+      },
+      {
+        "id": "scope_data_definitions",
+        "type": "markdown",
+        "body": "## Scope, data, and definitions\n\nUse MLB Statcast pitch data. Group pitches by game and plate appearance. Sort each group by pitch number.\n\nUse 2023 through 2025 for the first model. Train on 2023 and 2024. Test only on 2025.\n\nThis window avoids the 2026 ABS change. It also stays within the pitch-timer era. [2023 rules](https://www.mlb.com/rule-changes-2023/) [2026 ABS rules](https://www.mlb.com/press-release/press-release-mlb-announces-abs-challenge-system-coming-to-the-major-leagues-beginning-in-the-2026-season)\n\nStatcast changed from Trackman to Hawk-Eye in 2020. Public bat data begins in April 2024. [Statcast](https://www.mlb.com/glossary/statcast) [Bat tracking](https://www.mlb.com/news/what-you-need-to-know-about-statcast-bat-tracking)\n\nTherefore, do not make bat speed a required model input. Use it only in an optional recent-data study.\n\nUse four evidence labels:\n\n- **Observed rate:** A direct rate in matching records.\n- **Estimated chance:** A calibrated model result.\n- **Simulated chance:** A result from repeated model paths.\n- **Causal effect:** A result from a valid causal design.\n\nThe first release must produce the first three labels. It must not produce the fourth label."
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## Methodology\n\n### Sequence engine\n\nParse the seven blocks into an abstract syntax tree. Compile the tree into data, model, and algorithm actions.\n\nA sequence cannot cross a plate-appearance boundary. A missing or changed pitch label must create a warning.\n\n### Comparison engine\n\nMatch on pitcher, count, batter side, season, and target pitch type. Add location bands when enough records exist.\n\nShow both sample sizes. Reject a comparison when either group is too small.\n\nUse a plate-appearance bootstrap within pitcher groups. Report the interval and the matched observed difference.\n\n### Probability models\n\nPrefer an approved and calibrated remote model. Use a local baseline only when the catalog approves it.\n\nBuild separate probabilities for swing, contact, foul, called strike, and ball-in-play result.\n\nUse the last three pitches. Include type, speed change, movement change, location change, count, and batter side.\n\nUse pitcher history and batter history from prior dates only. This stops future-data leakage.\n\nFor an unspecified pitch shape, sample a real matching pitch. Do not combine separate mean values into a false pitch.\n\n### Simulation engine\n\n`method: simulation` starts automatic simulation. The user does not set a seed.\n\nThe engine creates a repeatable internal seed from the complete frozen execution plan.\n\nStart with 10,000 trials. Calculate Monte Carlo error for every requested event.\n\nDouble the trials when a 95 percent half-width exceeds 0.5 percentage points. Stop at 100,000 trials.\n\nSample one calibrated bootstrap model for each trial. Then sample the pitch result from that model.\n\nFor a full plate appearance, update balls and strikes after each pitch. Stop at a terminal result.\n\nIf later pitch choices are not fixed, use the named pitch-choice policy. Label this assumption in the result.\n\nReport sample uncertainty and Monte Carlo error separately. Keep the seed in the protected audit record."
+      },
+      {
+        "id": "priority_table_block",
+        "type": "table",
+        "tableId": "capability_priority"
+      },
+      {
+        "id": "remote_resources",
+        "type": "markdown",
+        "body": "## Remote data, models, and algorithms\n\nA study uses short resource names. A separate catalog maps each name to a local or remote service.\n\nThe study contains no address or secret. An administrator owns connection profiles and access rules.\n\nUse Arrow Flight SQL for compatible data systems. Use KServe V2 for compatible prediction services.\n\nUse OpenAPI for other remote algorithms. Use JSON Schema 2020-12 for all input and output contracts.\n\nThe compiler checks access, readiness, contracts, and approval state before execution.\n\nA model registry resolves a moving alias to an exact version. A serving endpoint runs that exact version.\n\nThe audit record keeps the alias, exact version, digest, data snapshot, and request identifiers.\n\nThe runtime controls all calls. A remote algorithm cannot select an undeclared model.\n\nThe default failure rule is `on unavailable: stop`. SeamScript never trains an untested replacement model.\n\n[Arrow Flight SQL](https://arrow.apache.org/docs/format/FlightSql.html) [KServe V2](https://kserve.github.io/website/docs/concepts/architecture/data-plane/v2-protocol) [OpenAPI](https://spec.openapis.org/oas/latest.html) [JSON Schema](https://json-schema.org/draft/2020-12) [MLflow aliases](https://mlflow.org/docs/latest/ml/model-registry/workflow)"
+      },
+      {
+        "id": "language_design",
+        "type": "markdown",
+        "body": "## Final language design\n\nUse a stable block grammar with readable values. Do not accept arbitrary English.\n\nThe file uses YAML-like keys and indentation. It uses Markdown-like lists and comments. It uses JSON-like strict types.\n\nSeamScript has seven blocks: `study`, `use`, `data`, `sequence`, `compare`, `estimate`, and `show`.\n\n```seam\nstudy: Does a fastball set up a slider?\n\nuse:\n  data: team pitches\n  model:\n    outcomes: approved pitch outcome\n  algorithm:\n    comparison: matched comparison\n    simulation: plate appearance simulator\n  on unavailable: stop\n\ndata:\n  seasons: 2023 through 2025\n  games: regular season\n\nsequence:\n  - fastball\n  - slider within 2 pitches\n\ncompare:\n  against: slider without fastball within 2 pitches before it\n  match: pitcher, count, batter side, season\n  minimum: 100 sliders per pitcher in each group\n\nestimate:\n  event: swing and miss on the slider\n  method: simulation\n  horizon: this pitch\n\nshow:\n  - observed rates\n  - simulated chance\n  - difference\n  - uncertainty range\n  - strike-zone map\n  - 5 example plate appearances\n  - calculation details\n```\n\nUse two spaces for indentation. Use lower-case names. Reject unknown and duplicate keys.\n\nThe study hides the seed and trial controls. `calculation details` shows the trial count and stopping rule.\n\nThe hidden seed stays in a protected audit record. Normal output never shows it.\n\nThis design is readable once. It is also regular enough to remember and type.\n\n[YAML](https://yaml.org/spec/1.2.2/) [CommonMark](https://spec.commonmark.org/spec) [JSON](https://www.rfc-editor.org/info/rfc8259/)"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## Limits, uncertainty, and checks\n\nPublic Statcast shows the delivered pitch. It does not show the catcher’s full intended target.\n\nObserved sequences include selection bias. Pitchers choose pitches for specific counts, batters, and game states.\n\nA model scenario is not a causal result. Never use words such as `caused`, `improved`, or `optimal` for it.\n\nPitch labels can change across tracking systems and seasons. Record the source label and any mapping.\n\nAUC does not test probability quality. Require calibration by season, pitch type, and sample size.\n\nTest the model on 2025 only after all model choices are final. Also test unseen pitchers as a separate stress test.\n\nReport Brier score, log loss, calibration error, and interval coverage. Report AUC only as a secondary value.\n\nCompare every complex model with a count-and-pitch-type baseline. Keep the simpler model when gains are small.\n\nFull-season impact claims require stronger designs. Defer K/9 and ERA projections."
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## Recommended next steps\n\n1. Build the parser for the seven blocks. Add exact errors for unknown keys and values.\n\n2. Build the catalog resolver. Freeze remote aliases to exact versions before execution.\n\n3. Add one data connector, one model connector, and one algorithm connector.\n\n4. Check access, readiness, input contracts, output contracts, approval state, and training cutoff.\n\n5. Prove plate-appearance boundaries and pitch order with one verified Statcast sample.\n\n6. Implement observed rates, matched comparisons, and immediate-pitch simulation.\n\n7. Build one result page. Show results, intervals, samples, examples, and the audit record.\n\n8. Record one demonstration around the fastball-to-slider question.\n\nThe first release should answer one question very well. It should not promise a complete pitching adviser."
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## Further questions\n\n- Which public Statcast fields remain complete across 2023 through 2025?\n- Which minimum sample gives stable pitcher-level comparisons?\n- Does a three-pitch history beat a one-pitch history on 2025 calibration?\n- Does empirical pitch resampling improve simulation reliability?\n- How much does the result change after location matching?\n- Can new users write a valid seven-block study without help?"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-30T20:44:20Z",
+    "status": "ready",
+    "datasets": {
+      "counterfactual_model_metrics": [
+        { "metric": "Accuracy", "score": 0.756 },
+        { "metric": "Precision", "score": 0.755 },
+        { "metric": "Recall", "score": 0.879 },
+        { "metric": "F1", "score": 0.812 },
+        { "metric": "ROC AUC", "score": 0.811 }
+      ],
+      "capability_priority": [
+        {
+          "order": 1,
+          "capability": "Exact sequence search",
+          "release": "Release now",
+          "reason": "This is the language core and the clearest demonstration.",
+          "guardrail": "Never cross a plate-appearance boundary."
+        },
+        {
+          "order": 2,
+          "capability": "Observed rates and sample counts",
+          "release": "Release now",
+          "reason": "These results give a model-free reference.",
+          "guardrail": "Show the numerator, denominator, and exclusions."
+        },
+        {
+          "order": 3,
+          "capability": "Matched comparison groups",
+          "release": "Release now",
+          "reason": "Raw sequence rates contain strong context bias.",
+          "guardrail": "Match pitcher, count, batter side, and season."
+        },
+        {
+          "order": 4,
+          "capability": "Speed, movement, and location differences",
+          "release": "Release now",
+          "reason": "Physical changes carry more value than names alone.",
+          "guardrail": "Normalize location and keep source labels."
+        },
+        {
+          "order": 5,
+          "capability": "Uncertainty and minimum samples",
+          "release": "Release now",
+          "reason": "Rare sequences can create unstable results.",
+          "guardrail": "Warn or stop when evidence is small."
+        },
+        {
+          "order": 6,
+          "capability": "Calibrated immediate-pitch chance",
+          "release": "Release now",
+          "reason": "Short predictions are useful and easier to test.",
+          "guardrail": "Show observed rates and calibration checks."
+        },
+        {
+          "order": 7,
+          "capability": "Automatic immediate-pitch simulation",
+          "release": "Release now",
+          "reason": "It answers chance questions with visible uncertainty.",
+          "guardrail": "Hide controls, but keep a complete audit record."
+        },
+        {
+          "order": 8,
+          "capability": "Plate-appearance simulation",
+          "release": "Release next",
+          "reason": "It supports strikeout, walk, and ball-in-play chances.",
+          "guardrail": "State the future pitch-choice policy."
+        },
+        {
+          "order": 9,
+          "capability": "Pitch-choice prediction",
+          "release": "Release next",
+          "reason": "It can show predictability and likely choices.",
+          "guardrail": "Test common-pitch bias and arsenal size."
+        },
+        {
+          "order": 10,
+          "capability": "Counterfactual pitch scenarios",
+          "release": "Defer",
+          "reason": "They can support careful what-if questions.",
+          "guardrail": "Say model scenario. Do not say causal effect."
+        },
+        {
+          "order": 11,
+          "capability": "Optimal pitch and season projections",
+          "release": "Defer",
+          "reason": "Strategy, adaptation, and selection can make gains too large.",
+          "guardrail": "Require stronger causal and game-theory tests."
+        }
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": []
+}
