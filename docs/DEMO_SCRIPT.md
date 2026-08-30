@@ -1,5 +1,11 @@
 # Five-minute demonstration script
 
+Create a silent interaction draft with `npm run demo:record`.
+
+The command writes `output/playwright/seamscript-demo.webm`.
+
+Use the script below for the final narration.
+
 ## 0:00 to 0:30 — Problem
 
 Baseball teams have detailed data and approved models.

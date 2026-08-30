@@ -13,6 +13,7 @@
     "model:evaluate": "tsx scripts/evaluate-demo-model.ts",
     "dev": "tsx src/cli.ts",
     "demo": "tsx src/cli.ts run examples/demo.seam --catalog examples/demo.catalog.yml",
+    "demo:record": "tsx scripts/record-demo.ts",
     "app": "tsx src/server.ts",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",

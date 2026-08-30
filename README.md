@@ -87,6 +87,8 @@ The demonstration uses 4,320 synthetic pitch records.
 
 Do not use its result as baseball evidence.
 
+Run `npm run demo:record` to create a short browser recording.
+
 ## Command line
 
 ```bash
