@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Compile and run readable baseball studies with SeamScript."
+    />
+    <title>SeamScript Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="SeamScript Studio home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span><strong>SeamScript</strong><small>Studio</small></span>
+      </a>
+      <div class="data-state">
+        <span aria-hidden="true"></span>Synthetic demonstration data
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">A language for baseball decisions</p>
+        <h1>Describe the question.<br /><em>Get checked evidence.</em></h1>
+        <p class="hero-copy">
+          No SQL. No model training. Every fact, target, and tool stays visible.
+        </p>
+        <ol class="formula" aria-label="Study formula">
+          <li><span>01</span>Data</li>
+          <li><span>02</span>Target</li>
+          <li><span>03</span>Facts</li>
+          <li><span>04</span>Method</li>
+          <li><span>05</span>Evidence</li>
+        </ol>
+      </section>
+
+      <section class="studio" aria-label="SeamScript editor and result">
+        <div class="editor-pane">
+          <div class="pane-head">
+            <div>
+              <p class="pane-label">Study</p>
+              <h2>fastball-slider.seam</h2>
+            </div>
+            <div class="actions">
+              <button class="button quiet" data-action="check">Check</button>
+              <button class="button quiet" data-action="compile">
+                Compile
+              </button>
+              <button class="button primary" data-action="run">
+                <span aria-hidden="true">▶</span> Run study
+              </button>
+            </div>
+          </div>
+          <div class="editor-wrap">
+            <pre
+              class="line-numbers"
+              id="line-numbers"
+              aria-hidden="true"
+            ></pre>
+            <textarea
+              id="source"
+              aria-label="SeamScript source"
+              spellcheck="false"
+            ></textarea>
+          </div>
+          <div class="status-bar">
+            <span id="source-status">Loading example…</span
+            ><span>SeamScript 0.2</span>
+          </div>
+        </div>
+
+        <div class="result-pane">
+          <div class="tabs" role="tablist" aria-label="Output form">
+            <button
+              class="tab active"
+              role="tab"
+              data-tab="evidence"
+              aria-selected="true"
+            >
+              Evidence
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              data-tab="plan"
+              aria-selected="false"
+            >
+              Plan
+            </button>
+            <button class="tab" role="tab" data-tab="sql" aria-selected="false">
+              SQL
+            </button>
+            <button
+              class="tab"
+              role="tab"
+              data-tab="diagnostics"
+              aria-selected="false"
+            >
+              Checks <span id="check-count">0</span>
+            </button>
+          </div>
+          <div id="panel-evidence" class="panel active" role="tabpanel">
+            <div class="empty-state" id="empty-state">
+              <div class="ball" aria-hidden="true"></div>
+              <h2>Ready to test the question</h2>
+              <p>Run the study to measure the target event.</p>
+            </div>
+            <div id="evidence" hidden></div>
+          </div>
+          <div id="panel-plan" class="panel" role="tabpanel">
+            <div id="plan"></div>
+          </div>
+          <div id="panel-sql" class="panel" role="tabpanel">
+            <pre id="sql"></pre>
+          </div>
+          <div id="panel-diagnostics" class="panel" role="tabpanel">
+            <div id="diagnostics"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="meaning">
+        <p class="eyebrow">One form. One meaning.</p>
+        <h2>The language separates the result from its inputs.</h2>
+        <div class="meaning-grid">
+          <article>
+            <span class="keyword">target</span>
+            <h3>What to estimate</h3>
+            <p>The pitch, outcome, and time limit form one clear target.</p>
+          </article>
+          <article>
+            <span class="keyword">when · versus</span>
+            <h3>What to compare</h3>
+            <p>The primary condition and baseline use the same target.</p>
+          </article>
+          <article>
+            <span class="keyword">facts</span>
+            <h3>What to account for</h3>
+            <p>Only facts known before the pitch can enter the model.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Built for Syntax Summit 2026</span
+      ><span>Compiler · Runtime · Audit</span>
+    </footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

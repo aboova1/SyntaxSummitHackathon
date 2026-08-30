@@ -2,16 +2,13 @@ catalog: team baseball
 version: 1
 
 defaults:
-  data: team pitches
-  model:
-    outcomes: approved pitch outcome
-  algorithm:
-    comparison: matched comparison
-    simulation: plate appearance simulator
+  model: approved pitch outcome
+  comparison: matched comparison
+  simulation: adaptive event simulation
 
 data:
   team pitches:
-    connector: flight sql
+    connector: http json
     connection: team warehouse
     object: baseball.analytics.statcast_pitches
     contract: seam.pitch.v1
@@ -43,10 +40,10 @@ algorithms:
     input: seam.comparison.request.v1
     output: seam.comparison.result.v1
 
-  plate appearance simulator:
+  adaptive event simulation:
     connector: openapi
     connection: team analytics gateway
-    operation: simulatePlateAppearance
+    operation: simulateEvent
     release: 2.4.0
     input: seam.simulation.request.v1
     output: seam.simulation.result.v1

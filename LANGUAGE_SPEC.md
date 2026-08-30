@@ -1,229 +1,512 @@
-# SeamScript Language Specification
+# SeamScript language specification
 
-Version 0.1
+Version 0.2
 
-## 1. Purpose
+## 1. Design rule
 
-SeamScript is a controlled language for sports sequence analysis.
+Write each idea once.
 
-The first release supports baseball pitch data.
+Use one key for one meaning.
 
-The language has seven stable blocks:
+Keep the grammar small and fixed.
 
-1. `study`
-2. `use`
-3. `data`
-4. `sequence`
-5. `compare`
-6. `estimate`
-7. `show`
+Make predictions different from facts.
 
-The structure uses ideas from YAML, Markdown, and JSON.
+Version 0.2 removes the old `sequence`, `compare`, `estimate`, and `show` blocks.
 
-It uses indentation and key-value lines from YAML.
-
-It uses lists and comments from Markdown.
-
-It uses strict names, types, and schema checks from JSON.
-
-SeamScript is not YAML. It does not support tags, anchors, or implicit values.
+One `analyze` block now contains the complete question.
 
 ## 2. Complete example
 
 ```seam
-study: Does a fastball set up a slider?
-
-use:
-  data: team pitches
-  model:
-    outcomes: approved pitch outcome
-  algorithm:
-    comparison: matched comparison
-    simulation: plate appearance simulator
-  on unavailable: stop
+study: Fastball before slider
 
 data:
+  source: team pitches
   seasons: 2023 through 2025
   games: regular season
 
-sequence:
-  - fastball
-  - slider within 2 pitches
+use:
+  model: approved pitch outcome
+  comparison: matched comparison
+  simulation: adaptive event simulation
 
-compare:
-  against: slider without fastball within 2 pitches before it
-  match: pitcher, count, batter side, season
-  minimum: 100 sliders per pitcher in each group
-
-estimate:
-  event: swing and miss on the slider
+analyze:
+  target:
+    pitch: slider
+    outcome: swing and miss
+    horizon: this pitch
+  when:
+    previous:
+      sequence: fastball
+      window: 2 pitches
+  versus:
+    previous:
+      exclude: fastball
+      window: 2 pitches
+  facts:
+    match: pitcher, count, batter side, season
+    account for: batter history, pitcher form, pitch shape, game situation, ballpark, defense
   method: simulation
-  horizon: this pitch
-
-show:
-  - observed rates
-  - simulated chance
-  - difference
-  - uncertainty range
-  - strike-zone map
-  - 5 example plate appearances
-  - calculation details
+  report:
+    - zone map
+    - 5 examples
 ```
 
-A new reader can follow this file from top to bottom.
+The meaning is formulaic:
 
-An experienced user can remember the seven block names.
+```text
+Use this data and these approved tools.
+Analyze this target outcome.
+Select records with this prior sequence.
+Compare them with this baseline when present.
+Use these facts as inputs.
+Apply this method.
+Add these optional report items.
+```
 
-## 3. Layout rules
+## 3. Top-level form
 
-- Save study files with the `.seam` extension.
-- Use lower-case block names and keys.
+SeamScript has four top-level keys:
+
+1. `study`
+2. `data`
+3. `use`
+4. `analyze`
+
+`study` and `use` are optional.
+
+`data` and `analyze` are required.
+
+The order is fixed.
+
+The `study` value is only a display name.
+
+It never changes execution.
+
+## 4. Layout
+
+- Save a program with the `.seam` extension.
+- Use lower-case keys.
 - Use two spaces for each indentation level.
 - Do not use tabs.
 - Put one key-value pair on each line.
-- Put a colon after each block name and key.
-- Use `-` for each list item.
+- Put a colon after each key.
+- Start a list item with `-`.
 - Start a full-line comment with `#`.
-- Blank lines have no meaning.
-- Duplicate keys are errors.
-- Unknown keys are errors.
-- Block order is fixed.
+- Use blank lines only for reading comfort.
+- Treat unknown keys as errors.
+- Treat duplicate keys as errors.
 
-The parser splits a key-value line at the first colon.
+The lexer splits a key-value line at its first unquoted colon.
 
-Text after that colon is the value.
+Normal values do not need quotes.
 
-Quotes are optional for normal text values.
+## 5. Data
 
-Use double quotes when leading or trailing spaces are part of a value.
-
-## 4. Study block
-
-The `study` block gives the question.
-
-It must be the first non-comment line.
-
-```seam
-study: Does a fastball set up a slider?
-```
-
-The question is a label. It does not control execution.
-
-## 5. Use block
-
-The `use` block selects named resources from a trusted catalog.
-
-```seam
-use:
-  data: team pitches
-  model:
-    outcomes: approved pitch outcome
-  algorithm:
-    comparison: matched comparison
-    simulation: plate appearance simulator
-  on unavailable: stop
-```
-
-The `data` value selects one data resource.
-
-The `model` map assigns a model to a model role.
-
-The `algorithm` map assigns an algorithm to an execution role.
-
-Resource names must use lower-case letters, spaces, numbers, and hyphens.
-
-The compiler matches each resource name exactly.
-
-Version 0.1 defines these model roles:
-
-- `outcomes`
-- `pitch choice`
-
-Version 0.1 defines these algorithm roles:
-
-- `comparison`
-- `simulation`
-- `uncertainty`
-
-The `on unavailable` key accepts these values:
-
-- `stop`
-- `use approved fallback`
-
-The default value is `stop`.
-
-SeamScript never trains a model because a resource is missing.
-
-A future `train` block can request training. Version 0.1 does not include that block.
-
-## 6. Data block
-
-The `data` block limits the selected data.
+The `data` block selects the factual records.
 
 ```seam
 data:
+  source: team pitches
   seasons: 2023 through 2025
   games: regular season
 ```
 
-Version 0.1 defines these keys:
+`source` selects one named catalog resource.
+
+Version 0.2 supports these filters:
 
 - `seasons`
 - `dates`
 - `games`
+- `teams`
 - `pitchers`
 - `batters`
-- `teams`
 
-Use `through` for an inclusive range.
+`through` defines an inclusive range.
 
-```seam
-seasons: 2023 through 2025
-```
-
-Use commas for a list on one line.
+Dates use the same form:
 
 ```seam
-teams: Cubs, Brewers, Cardinals
+dates: 2025-04-01 through 2025-04-30
 ```
 
-The compiler sends filters to the remote source when the connector supports this action.
+Commas separate values on one line.
 
-## 7. Sequence block
+The connector sends supported filters to the data source.
 
-The `sequence` block contains an ordered list.
+## 6. Approved tools
+
+The `use` block selects named computation resources.
 
 ```seam
-sequence:
-  - fastball
-  - slider within 2 pitches
+use:
+  model: approved pitch outcome
+  comparison: matched comparison
+  simulation: adaptive event simulation
 ```
 
-Each item has this form:
+The keys have fixed roles:
+
+- `model` predicts the target outcome.
+- `comparison` builds the baseline comparison.
+- `simulation` runs repeated outcome paths.
+
+The runtime calculates required uncertainty values automatically.
+
+The runtime stops when a required resource is unavailable.
+
+SeamScript never trains a replacement model automatically.
+
+Catalog defaults supply omitted resources.
+
+## 7. Analyze
+
+The `analyze` block contains one complete analysis.
+
+It has these keys:
+
+- `target`
+- `when`
+- `versus`
+- `facts`
+- `method`
+- `report`
+
+`target` and `method` are required.
+
+The other keys are optional.
+
+## 8. Target
+
+The `target` block defines the result to estimate.
+
+It never defines an input feature.
+
+```seam
+target:
+  pitch: slider
+  outcome: swing and miss
+  horizon: this pitch
+```
+
+`pitch` selects the pitch under analysis.
+
+`outcome` selects the predicted or measured event.
+
+`horizon` selects the end of the prediction.
+
+It accepts these values:
+
+- `this pitch`
+- `plate appearance`
+
+Immediate-pitch outcomes are:
+
+- `swing`
+- `swing and miss`
+- `contact`
+- `foul`
+- `called strike`
+- `ball in play`
+
+Plate-appearance outcomes are:
+
+- `strikeout`
+- `walk`
+- `hit by pitch`
+- `ball in play`
+- `reach base`
+
+`pitch` anchors the target state. Version 0.2 always requires it.
+
+## 9. Prior sequence
+
+The `when` block selects the primary records.
+
+```seam
+when:
+  previous:
+    sequence: fastball
+    window: 2 pitches
+```
+
+`sequence` lists pitches from oldest to newest.
+
+Use commas for more than one pitch.
+
+```seam
+sequence: changeup, fastball
+```
+
+`window` defines how many prior pitches the compiler can inspect.
+
+The target pitch is not part of this window.
+
+The sequence order must match.
+
+Other pitches can occur between sequence members.
+
+Use `window: 1 pitch` for the immediately prior pitch.
+
+The target pitch never belongs in this prior window.
+
+## 10. Baseline
+
+The optional `versus` block defines one baseline.
+
+It replaces the old `compare` block.
+
+```seam
+versus:
+  previous:
+    exclude: fastball
+    window: 2 pitches
+```
+
+`exclude` means the named pitch cannot occur in the complete window.
+
+The baseline uses the same target outcome and method.
+
+It does not repeat those values.
+
+Version 0.2 supports these baseline forms:
+
+```seam
+previous:
+  exclude: fastball
+  window: 2 pitches
+```
+
+```seam
+previous:
+  sequence: changeup
+  window: 2 pitches
+```
+
+## 11. Facts
+
+The `facts` block defines information that can affect the result.
+
+Facts are inputs. They are never prediction targets.
+
+```seam
+facts:
+  match: pitcher, count, batter side, season
+  account for: batter history, pitcher form, pitch shape, game situation, ballpark, defense
+```
+
+`match` defines facts that must be equal across comparison groups.
+
+`account for` defines feature groups for models and adjustment algorithms.
+
+The runtime reports the exact fields used from every group.
+
+Version 0.2 defines these feature groups:
+
+### Batter history
+
+- Batter side
+- Season-to-date rates
+- Rolling rates
+- Pitch-type splits
+- Zone swing rate
+- Chase rate
+- Contact rate
+- Prior batter-pitcher history
+
+### Pitcher form
+
+- Pitcher hand
+- Season-to-date rates
+- Rolling rates
+- Arsenal use
+- Pitch count
+- Days of rest
+- Times through the order
+
+### Pitch shape
+
+- Pitch type
+- Velocity
+- Movement
+- Spin
+- Release position
+- Extension
+- Plate location
+- Differences from prior pitches
+
+### Game situation
+
+- Balls and strikes
+- Outs
+- Inning
+- Score difference
+- Base state
+- Leverage
+- Batter times faced
+
+### Ballpark
+
+- Park identifier
+- Park factors
+- Altitude
+- Roof state
+- Weather available before the pitch
+
+### Defense
+
+- Catcher identifier
+- Catcher framing history
+- Fielder alignment
+- Fielder quality
+
+### Sequence history
+
+- Prior pitch types
+- Prior pitch results
+- Velocity changes
+- Movement changes
+- Location changes
+
+## 12. Feature timing
+
+Every field has one availability class:
+
+- `before pitch`
+- `after pitch`
+- `after plate appearance`
+- `after game`
+
+Predictive features can use only `before pitch` values.
+
+Historical aggregates must use dates before the target pitch.
+
+The target outcome can use later values only as its label.
+
+The compiler rejects feature leakage before execution.
+
+Examples of forbidden prediction inputs are:
+
+- Target pitch result
+- Target exit velocity
+- Final plate-appearance result
+- Future season statistics
+
+## 13. Method
+
+`method` selects one evidence method.
+
+```seam
+method: simulation
+```
+
+It accepts these values:
+
+- `observed`
+- `model`
+- `simulation`
+
+`observed` calculates rates from selected records.
+
+`model` calculates a chance with the approved outcome model.
+
+`simulation` repeatedly samples from approved model results.
+
+SeamScript never labels these methods as causal.
+
+## 14. Automatic simulation
+
+The user does not set a seed or trial count.
+
+The runtime starts with 10,000 trials.
+
+For a binary event, it calculates this Monte Carlo half-width:
 
 ```text
-<pitch> [in <zone>] [at <count>] [within <number> pitches]
+1.96 * sqrt(chance * (1 - chance) / trials)
 ```
 
-Examples:
+It doubles the trials when the half-width exceeds 0.5 percentage points.
+
+It stops when the limit passes or after 100,000 trials.
+
+The normal result shows the trial count and stopping reason.
+
+It never shows the seed.
+
+A protected audit record stores the seed.
+
+The runtime reports sample, model, and Monte Carlo uncertainty separately.
+
+## 15. Report additions
+
+The runtime always reports required evidence.
+
+The user does not request it again.
+
+Required evidence includes:
+
+- Target definition
+- Data scope
+- Sample counts
+- Observed rates
+- Method result
+- Baseline difference when present
+- Uncertainty
+- Exact resource versions
+- Warnings
+
+The optional `report` list adds supporting views.
 
 ```seam
-sequence:
-  - fastball high and inside
-  - slider low and outside within 2 pitches
+report:
+  - zone map
+  - 5 examples
 ```
 
-```seam
-sequence:
-  - changeup at 1-1
-  - fastball within 1 pitch
-```
+Version 0.2 accepts these additions:
 
-A sequence cannot cross a plate-appearance boundary.
+- `zone map`
+- `<number> examples`
+- `pitcher breakdown`
+- `batter breakdown`
+- `park breakdown`
 
-The compiler reports this rule in every execution plan.
+The automatic audit shows fields, filters, trials, stopping rules, and versions.
 
-Version 0.1 has these atomic pitch names:
+It does not show credentials or the hidden seed.
+
+## 16. Cross-key rules
+
+The compiler checks the complete analysis.
+
+`method: observed` needs only a data source.
+
+`method: model` needs an outcome model.
+
+`method: simulation` needs an outcome model and simulation algorithm.
+
+`versus` needs a comparison algorithm.
+
+`horizon: this pitch` accepts only immediate-pitch outcomes.
+
+`horizon: plate appearance` accepts only plate-appearance outcomes.
+
+Version 0.2 predicts that final result from the anchored pitch state.
+
+Its simulation samples that result. It does not build a pitch-by-pitch path.
+
+A future path simulator will need an approved pitch-choice policy.
+
+The runtime gets minimum sample rules from the catalog policy.
+
+The normal language does not repeat those technical limits.
+
+## 17. Pitch names
+
+Version 0.2 defines these atomic names:
 
 - `four-seam fastball`
 - `sinker`
@@ -235,211 +518,36 @@ Version 0.1 has these atomic pitch names:
 - `changeup`
 - `splitter`
 
-It also has these pitch groups:
+It defines these groups:
 
 - `fastball`
 - `breaking ball`
 - `off-speed pitch`
 
-The selected data catalog defines each group expansion.
+The data catalog defines each group expansion.
 
-The execution plan shows the expanded pitch names.
+The execution plan shows the expansion.
 
-## 8. Compare block
-
-The `compare` block defines the reference group.
-
-```seam
-compare:
-  against: slider without fastball within 2 pitches before it
-  match: pitcher, count, batter side, season
-  minimum: 100 sliders per pitcher in each group
-```
-
-The `against` key defines the reference event.
-
-Version 0.1 accepts this reference form:
-
-```text
-<pitch> without <pitch> within <number> pitches before it
-```
-
-The first pitch must match the final item in `sequence`.
-
-The `match` key defines required matching fields.
-
-The `minimum` key defines the sample rule.
-
-The `match` value is a comma-separated list of catalog fields.
-
-The `minimum` value has this form:
-
-```text
-<number> <records> per <group field> in each group
-```
-
-The compiler must show both group sizes.
-
-The compiler must reject an unsupported match field.
-
-## 9. Estimate block
-
-The `estimate` block requests a probability.
-
-```seam
-estimate:
-  event: swing and miss on the slider
-  method: simulation
-  horizon: this pitch
-```
-
-The `event` key defines the result of interest.
-
-Version 0.1 accepts these immediate-pitch events:
-
-- `swing`
-- `swing and miss`
-- `contact`
-- `foul`
-- `called strike`
-- `ball in play`
-
-It accepts these plate-appearance events:
-
-- `strikeout`
-- `walk`
-- `hit by pitch`
-- `ball in play`
-
-The `method` key accepts these values:
-
-- `observed`
-- `model`
-- `simulation`
-
-The `horizon` key accepts these values:
-
-- `this pitch`
-- `rest of plate appearance`
-
-The `method: simulation` line starts automatic simulation.
-
-The language does not show the random seed.
-
-The runtime stores the seed in a protected audit record.
-
-The runtime starts with 10,000 trials.
-
-It calculates the Monte Carlo error for every requested event.
-
-It doubles the trial count when a 95 percent half-width exceeds 0.5 percentage points.
-
-For a binary event, the half-width is `1.96 * sqrt(p * (1 - p) / trials)`.
-
-It stops after the limit passes or after 100,000 trials.
-
-The runtime reports the final trial count and stopping reason.
-
-It reports model and sample uncertainty separately from Monte Carlo error.
-
-Use this form for a full plate-appearance simulation:
-
-```seam
-estimate:
-  event: strikeout, walk, or ball in play
-  method: simulation
-  horizon: rest of plate appearance
-  future pitches: observed pitch choices
-```
-
-The `future pitches` key accepts these values:
-
-- `observed pitch choices`
-- `selected pitch choice model`
-
-The second value requires the `pitch choice` model role.
-
-## 10. Show block
-
-The `show` block lists required output.
-
-```seam
-show:
-  - observed rates
-  - simulated chance
-  - difference
-  - uncertainty range
-  - strike-zone map
-  - 5 example plate appearances
-  - calculation details
-```
-
-Output order follows list order.
-
-Unknown output names are errors.
-
-Version 0.1 accepts these output names:
-
-- `observed rates`
-- `model chance`
-- `simulated chance`
-- `difference`
-- `uncertainty range`
-- `strike-zone map`
-- `<number> example plate appearances`
-- `calculation details`
-
-`calculation details` does not show the hidden seed.
-
-## 11. Cross-block rules
-
-The compiler checks all blocks together.
-
-`method: observed` does not require a model.
-
-`method: model` requires the `outcomes` model role.
-
-`method: simulation` requires the `outcomes` model role and the `simulation` algorithm role.
-
-`horizon: this pitch` accepts only immediate-pitch events.
-
-`horizon: rest of plate appearance` accepts only plate-appearance events.
-
-A plate-appearance simulation also requires the `future pitches` key.
-
-The `difference` output requires a `compare` block.
-
-The `simulated chance` output requires `method: simulation`.
-
-When `use` is absent, the compiler uses approved catalog defaults.
-
-The compiler stops when a required default does not exist.
-
-## 12. Resource catalog
+## 18. Resource catalog
 
 The catalog maps readable names to local or remote resources.
 
-The analyst does not write addresses or credentials in a study.
+The analyst does not write addresses or credentials.
 
-An administrator owns the catalog and connection profiles.
-
-```seam
+```yaml
 catalog: team baseball
 version: 1
 
 defaults:
-  data: team pitches
-  model:
-    outcomes: approved pitch outcome
-  algorithm:
-    comparison: matched comparison
-    simulation: plate appearance simulator
+  model: approved pitch outcome
+  comparison: matched comparison
+  simulation: adaptive event simulation
 
 data:
   team pitches:
-    connector: flight sql
-    connection: team warehouse
-    object: baseball.analytics.statcast_pitches
+    connector: csv
+    connection: demo data
+    object: data/sample-pitches.csv
     contract: seam.pitch.v1
     access: read only
 
@@ -468,87 +576,45 @@ algorithms:
     release: 3.2.1
     input: seam.comparison.request.v1
     output: seam.comparison.result.v1
-
-  plate appearance simulator:
-    connector: openapi
-    connection: team analytics gateway
-    operation: simulatePlateAppearance
-    release: 2.4.0
-    input: seam.simulation.request.v1
-    output: seam.simulation.result.v1
 ```
 
-The catalog can point to a local resource. The study syntax does not change.
+The catalog can use local resources without changing the study.
 
-An approved fallback must have its own named catalog entry.
+## 19. Remote checks
 
-The primary entry must name that fallback.
+Before execution, the compiler performs these steps:
 
-`use approved fallback` cannot select any other resource.
-
-## 13. Remote resource rules
-
-The compiler performs these steps before execution:
-
-1. Resolve each readable resource name.
-2. Check the connection profile.
-3. Read the remote metadata.
-4. Check the input and output contracts.
-5. Check the approval requirements.
-6. Resolve each alias to an exact version.
+1. Resolve every readable resource name.
+2. Check each connection profile.
+3. Read resource information.
+4. Check input and output contracts.
+5. Check approval requirements.
+6. Resolve aliases to exact versions.
 7. Freeze all versions in the execution plan.
-8. Ask the user to approve the plan when policy requires approval.
+8. Check data movement and feature timing.
 
-The compiler produces four internal forms:
-
-1. A parsed syntax tree.
-2. A typed study plan.
-3. A resource plan with exact versions.
-4. A bounded execution graph.
-
-The runtime only executes the fourth form.
-
-Model aliases can change between runs.
-
-The runtime records the alias and the exact resolved version.
-
-The runtime also records the model digest when the service provides it.
-
-For MLflow, the registry resolves an alias to a model version.
-
-KServe serves that exact version through its version endpoint.
-
-The runtime never resolves the alias again during that execution.
+The runtime never resolves an alias again during that execution.
 
 If the exact version becomes unavailable, the execution stops.
 
-The compiler rejects a model with missing output events.
+It never trains or selects an undeclared replacement.
 
-The compiler rejects an algorithm with an incompatible contract.
+## 20. Compiler forms
 
-The compiler stops when a required remote resource is not ready.
+The compiler produces these forms:
 
-The compiler never selects an unapproved fallback.
+1. Lexer tokens
+2. Concrete syntax tree
+3. Typed analysis tree
+4. Checked resource plan
+5. Bounded execution graph
+6. Generated SQL and service requests
 
-A data connector must provide a stable snapshot identifier or an extraction hash.
+The runtime executes only the bounded graph.
 
-The result is non-repeatable when neither value exists.
+## 21. Connector contract
 
-An audited production run stops in that condition.
-
-## 14. Standard connector contracts
-
-Use Arrow Flight SQL for compatible remote SQL systems.
-
-Use vendor adapters when the warehouse does not support Flight SQL.
-
-Use KServe V2 for compatible prediction services.
-
-Use OpenAPI for general remote algorithms.
-
-Use JSON Schema 2020-12 for request and response contracts.
-
-Each connector must expose these operations:
+Each connector provides these operations:
 
 ```text
 describe
@@ -558,127 +624,55 @@ cancel
 audit
 ```
 
-The `describe` operation returns identity, version, and contracts.
-
-The `check` operation tests access and compatibility.
-
-The `run` operation executes one bounded request.
-
-The `cancel` operation stops a supported request.
-
-The `audit` operation returns the execution record.
-
-Each remote request gets an idempotency key and a time limit.
+Each remote request gets a time limit and idempotency key.
 
 The runtime retries only safe or idempotent requests.
 
-The SeamScript runtime controls remote calls.
+The execution plan lists every service that receives data.
 
-The simulation algorithm does not select a model by itself.
+## 22. Errors
 
-The runtime sends model probability vectors to the selected simulation algorithm.
-
-A full plate-appearance simulation also needs a pitch-choice policy.
-
-That policy can use an approved model or a named observed policy.
-
-## 15. Security and trust
-
-Study files and catalogs must not contain secrets.
-
-Connection profiles get secrets from the operating system or a secret manager.
-
-Data connections use read-only access by default.
-
-The compiler sends only required columns and rows to a remote model.
-
-The execution plan lists every remote service that will receive data.
-
-The runtime does not send player names when stable identifiers are sufficient.
-
-The runtime stops on a contract change. It does not guess a field mapping.
-
-The audit record contains these values:
-
-- Normalized study text
-- Data source and snapshot
-- Executed query or query hash
-- Model alias and exact version
-- Model digest when available
-- Algorithm name and exact version
-- Input and output contract versions
-- Hidden simulation seed
-- Trial count
-- Request identifiers
-- Warnings and retries
-
-## 16. Time safety
-
-Remote models can contain data from later seasons.
-
-The model metadata must give its training cutoff.
-
-The runtime compares that cutoff with the study period.
-
-It labels each estimate as prospective or retrospective.
-
-It warns when a historical study uses later training data.
-
-## 17. Error style
-
-Errors identify the block, key, value, and correction.
+Each error names the source, line, key, problem, and correction.
 
 ```text
-Line 18, estimate.method:
-  Unknown value "simulate".
-  Use "observed", "model", or "simulation".
+study.seam:24:5 [S202]
+Unknown target key "result".
+Use 'outcome'.
 ```
 
 ```text
-Resource "approved pitch outcome" is not ready.
-The study says "on unavailable: stop".
-No model was trained or selected as a fallback.
+study.seam:37:3 [S315]
+"simulation" needs an outcome model.
+Add "use.model" or configure an approved catalog default.
 ```
 
-## 18. Core grammar
-
-This grammar shows the document structure.
+## 23. Core grammar
 
 ```ebnf
-document       = study, use?, data, sequence, compare?, estimate?, show ;
+document       = study?, data, use?, analyze ;
 study          = "study:", text, newline ;
-use            = "use:", newline, use_entry+ ;
 data           = "data:", newline, data_entry+ ;
-sequence       = "sequence:", newline, sequence_item+ ;
-compare        = "compare:", newline, compare_entry+ ;
-estimate       = "estimate:", newline, estimate_entry+ ;
-show           = "show:", newline, show_item+ ;
-sequence_item  = indent, "- ", pitch_expression, newline ;
-show_item      = indent, "- ", output_expression, newline ;
+use            = "use:", newline, use_entry+ ;
+analyze        = "analyze:", newline, analyze_entry+ ;
+target         = indent, "target:", newline, target_entry+ ;
+when           = indent, "when:", newline, previous ;
+versus         = indent, "versus:", newline, previous ;
+facts          = indent, "facts:", newline, facts_entry+ ;
+report         = indent, "report:", newline, report_item+ ;
+previous       = indent, "previous:", newline, previous_entry+ ;
+report_item    = indent, indent, "- ", report_value, newline ;
 entry          = indent, key, ": ", value, newline ;
 indent         = "  " ;
 newline        = "\n" ;
 ```
 
-The parser first reads blocks and indentation.
+The parser reads structure first.
 
-The domain parser then checks each typed value.
+The semantic checker then reads domain values.
 
-This two-step design keeps error messages clear.
+This separation keeps errors specific.
 
-## 19. Design decision
-
-Do not make SeamScript accept arbitrary English.
-
-Arbitrary English creates synonyms, hidden assumptions, and unclear errors.
-
-Use readable values inside a small and stable block grammar.
-
-This design gives beginners a readable file.
-
-It also gives regular users a pattern they can remember.
-
-## 20. Standards used
+## 24. Standards
 
 - [YAML 1.2.2](https://yaml.org/spec/1.2.2/)
 - [CommonMark 0.31.2](https://spec.commonmark.org/spec)

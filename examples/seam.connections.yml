@@ -1,0 +1,35 @@
+connections:
+  team warehouse:
+    base_url: https://warehouse-gateway.example.invalid
+    token_env: SEAM_WAREHOUSE_TOKEN
+    timeout_ms: 30000
+    retries: 1
+    operations:
+      query:
+        path: /v1/query
+        method: POST
+
+  team model registry:
+    base_url: https://mlflow.example.invalid
+    token_env: SEAM_MODEL_REGISTRY_TOKEN
+    timeout_ms: 10000
+    retries: 1
+
+  team model gateway:
+    base_url: https://models.example.invalid
+    token_env: SEAM_MODEL_TOKEN
+    timeout_ms: 10000
+    retries: 1
+
+  team analytics gateway:
+    base_url: https://analytics.example.invalid
+    token_env: SEAM_ANALYTICS_TOKEN
+    timeout_ms: 30000
+    retries: 1
+    operations:
+      comparePitchSequences:
+        path: /v1/compare-pitch-sequences
+        method: POST
+      simulateEvent:
+        path: /v1/simulate-event
+        method: POST

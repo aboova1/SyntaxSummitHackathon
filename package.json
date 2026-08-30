@@ -1,0 +1,41 @@
+{
+  "name": "seamscript",
+  "version": "0.2.0",
+  "description": "A controlled language and runtime for baseball sequence analysis.",
+  "type": "module",
+  "bin": {
+    "seam": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "npm run typecheck && npm run test",
+    "data:generate": "tsx scripts/generate-demo-data.ts",
+    "model:evaluate": "tsx scripts/evaluate-demo-model.ts",
+    "dev": "tsx src/cli.ts",
+    "demo": "tsx src/cli.ts run examples/demo.seam --catalog examples/demo.catalog.yml",
+    "app": "tsx src/server.ts",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "csv-parse": "^7.0.2",
+    "yaml": "^2.9.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^24.10.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,112 +1,203 @@
 # SeamScript
 
-SeamScript is a readable language for sports sequence analysis.
+SeamScript turns a baseball question into a checked execution plan.
 
-It lets analysts study pitch sequences without Python, SQL, or model training.
+It gives coaches access to approved data, models, and algorithms.
 
-The first release focuses on baseball.
+The user does not need Python, SQL, or model training.
 
-## Core design
+The first release studies pitch sequences.
 
-A `.seam` file has seven stable blocks:
+## The language
 
-1. `study`
-2. `use`
-3. `data`
-4. `sequence`
-5. `compare`
-6. `estimate`
-7. `show`
+A study has four top-level keys.
 
-The syntax uses YAML-like keys and indentation.
+- `study` gives an optional name.
+- `data` selects facts.
+- `use` selects approved tools.
+- `analyze` defines one question.
 
-It uses Markdown-like lists and comments.
-
-It uses JSON-like strict types and errors.
-
-## Example
+The `analyze` block keeps the target separate from the input facts.
 
 ```seam
-study: Does a fastball set up a slider?
-
-use:
-  data: team pitches
-  model:
-    outcomes: approved pitch outcome
-  algorithm:
-    comparison: matched comparison
-    simulation: plate appearance simulator
-  on unavailable: stop
+study: Fastball before slider
 
 data:
+  source: synthetic demo pitches
   seasons: 2023 through 2025
   games: regular season
 
-sequence:
-  - fastball
-  - slider within 2 pitches
+use:
+  model: approved demo outcome
+  comparison: matched comparison
+  simulation: adaptive simulation
 
-compare:
-  against: slider without fastball within 2 pitches before it
-  match: pitcher, count, batter side, season
-  minimum: 100 sliders per pitcher in each group
-
-estimate:
-  event: swing and miss on the slider
+analyze:
+  target:
+    pitch: slider
+    outcome: swing and miss
+    horizon: this pitch
+  when:
+    previous:
+      sequence: fastball
+      window: 2 pitches
+  versus:
+    previous:
+      exclude: fastball
+      window: 2 pitches
+  facts:
+    match: pitcher, count, batter side, season
+    account for: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense
   method: simulation
-  horizon: this pitch
-
-show:
-  - observed rates
-  - simulated chance
-  - difference
-  - uncertainty range
-  - calculation details
+  report:
+    - zone map
+    - 5 examples
 ```
 
-`method: simulation` starts the simulation automatically.
+The syntax uses one formula:
 
-The system hides the random seed and trial controls.
+```text
+data -> target -> conditions -> facts -> method -> evidence
+```
 
-The protected audit record keeps the seed for repeatability.
+`target` is the event to estimate.
 
-`calculation details` shows the trial count and stopping rule.
+`facts` contains information available before that event.
 
-It does not show the seed.
+`when` selects the primary records.
+
+`versus` selects an optional baseline.
+
+`report` adds views. Core evidence and audit data are automatic.
+
+## Run the project
+
+Use Node.js 22 or later.
+
+```bash
+npm install
+npm run check
+npm run demo
+npm run app
+```
+
+Open `http://127.0.0.1:4173` after the last command.
+
+The demonstration uses 4,320 synthetic pitch records.
+
+Do not use its result as baseball evidence.
+
+## Command line
+
+```bash
+npm run dev -- check examples/demo.seam --catalog examples/demo.catalog.yml
+npm run dev -- compile examples/demo.seam --catalog examples/demo.catalog.yml --emit plan
+npm run dev -- compile examples/demo.seam --catalog examples/demo.catalog.yml --emit sql
+npm run dev -- explain examples/demo.seam --catalog examples/demo.catalog.yml
+npm run demo
+```
+
+Use `--json` for public machine output.
+
+Use `--audit-file <path>` for the protected repeatability record.
+
+The normal output never includes the simulation seed.
+
+## What works
+
+- A custom indentation lexer
+- A concrete syntax tree parser
+- A typed baseball semantic checker
+- Source ranges and useful corrections
+- A trusted resource catalog
+- Exact remote model version resolution
+- A frozen execution graph and fingerprint
+- Parameterized SQL generation
+- Plate-appearance-safe sequence selection
+- Exact-strata comparison weights
+- More than 70 baseball data fields
+- Pre-pitch feature timing checks
+- Observed, model, and simulated evidence
+- Adaptive automatic simulation
+- Confidence ranges and explicit uncertainty limits
+- Zone maps, examples, and breakdown data
+- CSV and bounded HTTP data access
+- MLflow alias resolution
+- Exact KServe V2 inference
+- OpenAPI comparison and simulation services
+- A CLI and responsive browser studio
 
 ## Remote resources
 
-The `use` block selects approved data, models, and algorithms by readable name.
+The study uses short resource names.
 
-A trusted catalog maps each name to a local or remote resource.
+An administrator-owned catalog maps names to resources.
 
-Study files contain no addresses or secrets.
+A separate connections file stores service locations and token names.
 
-The compiler checks access, contracts, approval state, and exact versions.
+The study never contains an address or secret.
 
-It stops when a required resource is unavailable.
+The runtime supports these remote paths:
 
-It never trains an untested replacement model.
+- HTTP JSON data gateways
+- MLflow model aliases
+- KServe V2 model services
+- OpenAPI comparison services
+- OpenAPI simulation services
 
-## First target user
+The runtime freezes each model alias to an exact version.
 
-The first target user is a pregame game-plan coordinator.
+It never trains an undeclared replacement model.
 
-This user can review results before a coach or player receives them.
+Direct Flight SQL needs an ADBC sidecar or HTTP gateway.
 
-Later releases can support catcher review and fast in-game decisions.
+The current Node runtime does not claim direct Flight SQL support.
+
+See [REMOTE_RESOURCES.md](docs/REMOTE_RESOURCES.md).
+
+## Evidence rules
+
+SeamScript uses four separate labels.
+
+- An observed rate describes matching records.
+- A model chance is a point prediction.
+- A simulated chance samples model results.
+- A causal effect needs a separate causal design.
+
+The current release does not report causal effects.
+
+Model uncertainty is explicit when the model does not provide it.
+
+Monte Carlo error does not include model or data uncertainty.
+
+## Target users
+
+The first user is a pregame game-plan coordinator.
+
+The next users are a catching coordinator and an in-game pitching coach.
+
+See [TARGET_USERS.md](TARGET_USERS.md) for their decisions and limits.
+
+## Test the project
+
+```bash
+npm run typecheck
+npm test
+npm run test:e2e
+npm run build
+npm run model:evaluate
+```
+
+The test suite covers syntax, planning, execution, remote failures, security, and browser behavior.
 
 ## Project documents
 
 - [Final pitch](PITCH.md)
 - [Language specification](LANGUAGE_SPEC.md)
-- [Target users](TARGET_USERS.md)
-- [Example study](examples/fastball-slider.seam)
-- [Example resource catalog](examples/seam.catalog.yml)
-- [Research report](research/seamscript-pitch-sequencing/report.html)
-
-## Status
-
-The research and language design are complete for version 0.1.
-
-The parser, connectors, analysis engine, and interface are not implemented yet.
+- [Compiler architecture](docs/ARCHITECTURE.md)
+- [Research findings](docs/RESEARCH_FINDINGS.md)
+- [Data contract](docs/DATA_CONTRACT.md)
+- [Demonstration model card](docs/DEMO_MODEL.md)
+- [Remote resources](docs/REMOTE_RESOURCES.md)
+- [Demonstration script](docs/DEMO_SCRIPT.md)
+- [Devpost text](docs/DEVPOST.md)

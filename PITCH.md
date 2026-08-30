@@ -1,39 +1,60 @@
 # SeamScript pitch
 
-Baseball teams have valuable data and tested models.
+SeamScript turns a baseball question into a checked execution plan.
 
-Most coaches cannot use them without an analyst, SQL, and custom code.
+Baseball teams have detailed data and tested models.
 
-SeamScript turns a baseball question into a precise and repeatable analysis.
+Most coaches still need an analyst to use them.
 
-The first user is a pregame game-plan coordinator.
+SeamScript removes that access gap.
 
-Its seven blocks read like a short study plan.
+A pregame coordinator writes four short blocks: `data`, `use`, `analyze`, and an optional `study` name.
 
-Users select data, models, and algorithms by readable names.
+Inside `analyze`, `target` states what to estimate.
 
-A trusted catalog connects those names to team warehouses and approved services.
+`facts` states what the model can use.
 
-The compiler checks data contracts, model versions, approval state, and time leakage.
+`when` selects the primary sequence.
 
-It then finds sequences, builds matched groups, and estimates event chances.
+`versus` selects the baseline.
 
-`method: simulation` runs enough trials for a stable result.
+This structure prevents a target from looking like an input fact.
 
-The system hides technical controls, but keeps them in a complete audit record.
+It also removes repeated `compare`, `estimate`, and `show` commands.
 
-Every result separates observed rates, model estimates, simulated chances, and causal claims.
+The compiler checks every key, value, resource, contract, and feature time.
 
-The first demonstration asks one clear question:
+It then builds a frozen plan, parameterized SQL, and bounded service calls.
 
-> Does a fastball set up a slider?
+The plan can use a team warehouse and approved remote models.
 
-SeamScript shows the observed rates, simulated chance, uncertainty, and real examples.
+The system never trains an untested model by default.
 
-The result is useful to a coach and reviewable by a data scientist.
+`method: simulation` runs automatic trials for the target event.
 
-Later versions can review catcher calls and support fast mound-visit decisions.
+The runtime stops when Monte Carlo error reaches its approved limit.
 
-SeamScript does not replace trusted baseball models.
+The user does not set a seed or trial count.
 
-It makes those models safe and easy to use.
+The private audit record keeps the seed for repeatability.
+
+Every result separates four ideas:
+
+- observed rate;
+- model chance;
+- simulated chance;
+- uncertainty limits.
+
+SeamScript does not call a matched difference a causal effect.
+
+The first product serves a pregame game-plan coordinator.
+
+Later releases can review catcher calls and support mound-visit decisions.
+
+Those releases need private call data and stronger speed tests.
+
+The demonstration uses synthetic pitches and a transparent test model.
+
+Its result proves the complete product path. It does not prove a baseball claim.
+
+SeamScript makes trusted baseball analysis readable, repeatable, and reviewable.
