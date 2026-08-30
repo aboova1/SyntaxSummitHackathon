@@ -19,6 +19,14 @@
         </div>
         <nav class="rail-nav">
           <p class="nav-label">Workspace</p>
+          <button class="nav-item" data-view="playground">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M9 3v5l-5 9a2.5 2.5 0 0 0 2.2 4h11.6A2.5 2.5 0 0 0 20 17l-5-9V3M8 13h8M8 3h8"
+              />
+            </svg>
+            <span>Playground</span>
+          </button>
           <button
             class="nav-item nav-active"
             data-view="studio"
@@ -252,6 +260,161 @@
                 ><small>Review limits and records.</small>
               </div>
             </section>
+          </section>
+          <section class="page narrow-page" data-page="playground" hidden>
+            <header class="page-header">
+              <div>
+                <p class="eyebrow">Guided playground</p>
+                <h1>Build a study without code</h1>
+                <p class="page-description">
+                  Select a question. The playground writes valid SeamScript and
+                  runs the full analysis.
+                </p>
+              </div>
+              <div class="page-actions">
+                <span class="dot-label"
+                  ><span class="status-dot positive"></span>Ready to run</span
+                >
+              </div>
+            </header>
+
+            <div class="playground-layout">
+              <form class="playground-form" id="playground-form">
+                <div class="section-heading">
+                  <div>
+                    <h2>Question</h2>
+                    <p>Each choice changes one clear part of the study.</p>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <span class="form-step">01</span>
+                  <div class="form-fields">
+                    <label>
+                      <span>Target pitch</span>
+                      <input
+                        value="Slider"
+                        readonly
+                        aria-label="Target pitch"
+                      />
+                      <small
+                        >The demonstration data supports slider
+                        sequences.</small
+                      >
+                    </label>
+                    <label>
+                      <span>Target event</span>
+                      <select id="playground-outcome" aria-label="Target event">
+                        <option value="swing and miss">Swing and miss</option>
+                        <option value="contact">Contact</option>
+                        <option value="ball in play">Ball in play</option>
+                      </select>
+                      <small>This is the event that the study estimates.</small>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <span class="form-step">02</span>
+                  <div class="form-fields">
+                    <label>
+                      <span>Previous pitch</span>
+                      <select
+                        id="playground-previous"
+                        aria-label="Previous pitch"
+                      >
+                        <option value="fastball">Fastball</option>
+                        <option value="curveball">Curveball</option>
+                      </select>
+                      <small>The baseline excludes this pitch type.</small>
+                    </label>
+                    <label>
+                      <span>Lookback</span>
+                      <select id="playground-window" aria-label="Lookback">
+                        <option value="1">1 pitch</option>
+                        <option value="2" selected>2 pitches</option>
+                        <option value="3">3 pitches</option>
+                      </select>
+                      <small>The study checks this many prior pitches.</small>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <span class="form-step">03</span>
+                  <div class="form-fields one-column">
+                    <label>
+                      <span>Evidence method</span>
+                      <select
+                        id="playground-method"
+                        aria-label="Evidence method"
+                      >
+                        <option value="simulation">Automatic simulation</option>
+                        <option value="model">Approved model</option>
+                        <option value="observed">Observed records</option>
+                      </select>
+                      <small
+                        >Automatic simulation estimates the event chance and
+                        stops at the approved error limit.</small
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <div class="playground-actions">
+                  <button class="button" type="button" id="playground-reset">
+                    Reset
+                  </button>
+                  <button class="button button-primary" type="submit">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="m9 7 8 5-8 5V7Z" />
+                    </svg>
+                    Run playground
+                  </button>
+                </div>
+              </form>
+
+              <div class="playground-output">
+                <section class="preview-section">
+                  <div class="section-heading">
+                    <div>
+                      <h2>Generated study</h2>
+                      <p>Every change updates this source.</p>
+                    </div>
+                    <button
+                      class="text-button"
+                      id="playground-open"
+                      type="button"
+                    >
+                      Open in Studio
+                    </button>
+                  </div>
+                  <pre
+                    id="playground-source"
+                    aria-label="Generated SeamScript"
+                  ></pre>
+                </section>
+                <section
+                  class="playground-result"
+                  id="playground-result"
+                  aria-live="polite"
+                >
+                  <div class="playground-empty">
+                    <span class="empty-mark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M5 19 19 5M7 5h12v12M5 12v7h7" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>Ready to test this question</strong>
+                      <p>
+                        The playground uses the same checked runtime as Studio.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
           </section>
           <section class="page narrow-page" data-page="guide" hidden>
             <header class="page-header">

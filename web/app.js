@@ -403,12 +403,12 @@ const showEvidence = (result) => {
     "</code></div></div></section>";
 };
 
-const saveRun = (result) => {
+const saveRun = (result, sourceText = source.value) => {
   const runs = readStorage(HISTORY_KEY, []);
   runs.unshift({
     id: Date.now() + "-" + result.audit.planFingerprint.slice(0, 8),
     study: result.study,
-    source: source.value,
+    source: sourceText,
     chance:
       result.primary.simulatedChance ??
       result.primary.modelChance ??
@@ -525,6 +525,181 @@ element("#new-study").addEventListener("click", () => {
   markChanged();
   source.focus();
   showToast("New study ready.");
+});
+
+const playgroundOutcome = element("#playground-outcome");
+const playgroundPrevious = element("#playground-previous");
+const playgroundWindow = element("#playground-window");
+const playgroundMethod = element("#playground-method");
+const playgroundPreview = element("#playground-source");
+const playgroundResult = element("#playground-result");
+let lastPlaygroundResponse;
+
+const titleCase = (value) =>
+  value.replace(/\b\w/g, (character) => character.toUpperCase());
+
+const buildPlaygroundSource = () => {
+  const previous = playgroundPrevious.value;
+  const outcome = playgroundOutcome.value;
+  const window = Number(playgroundWindow.value);
+  const pitchWord = window === 1 ? "pitch" : "pitches";
+  return [
+    "study: " + titleCase(previous) + " before slider for " + outcome,
+    "",
+    "data:",
+    "  source: synthetic demo pitches",
+    "  seasons: 2023 through 2025",
+    "  games: regular season",
+    "",
+    "use:",
+    "  model: approved demo outcome",
+    "  comparison: matched comparison",
+    "  simulation: adaptive simulation",
+    "",
+    "analyze:",
+    "  target:",
+    "    pitch: slider",
+    "    outcome: " + outcome,
+    "    horizon: this pitch",
+    "  when:",
+    "    previous:",
+    "      sequence: " + previous,
+    "      window: " + window + " " + pitchWord,
+    "  versus:",
+    "    previous:",
+    "      exclude: " + previous,
+    "      window: " + window + " " + pitchWord,
+    "  facts:",
+    "    match: pitcher, count, batter side, season",
+    "    account for: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense",
+    "  method: " + playgroundMethod.value,
+    "  report:",
+    "    - zone map",
+    "    - 5 examples",
+    "",
+  ].join("\n");
+};
+
+const emptyPlaygroundResult = () => {
+  playgroundResult.innerHTML =
+    '<div class="playground-empty"><span class="empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19 19 5M7 5h12v12M5 12v7h7"></path></svg></span><div><strong>Ready to test this question</strong><p>The playground uses the same checked runtime as Studio.</p></div></div>';
+};
+
+const updatePlayground = () => {
+  playgroundPreview.textContent = buildPlaygroundSource();
+  lastPlaygroundResponse = undefined;
+  emptyPlaygroundResult();
+};
+
+const playgroundValue = (group, evidenceType) => {
+  if (evidenceType === "simulated chance") return group.simulatedChance;
+  if (evidenceType === "model chance") return group.modelChance;
+  return group.observedRate;
+};
+
+const showPlaygroundResult = (result) => {
+  const primary = playgroundValue(result.primary, result.evidence);
+  const baseline = result.baseline
+    ? playgroundValue(result.baseline, result.evidence)
+    : undefined;
+  const difference =
+    result.evidence === "simulated chance"
+      ? result.difference?.simulated
+      : result.evidence === "model chance"
+        ? result.difference?.model
+        : result.difference?.observed;
+  playgroundResult.innerHTML =
+    '<div class="playground-summary-head"><div><span>Run complete</span><strong>' +
+    escapeHtml(result.study) +
+    '</strong></div><div class="playground-chance"><span>' +
+    escapeHtml(result.evidence) +
+    "</span><strong>" +
+    percent(primary) +
+    '</strong></div></div><div class="playground-comparison"><div><span>Primary</span><strong>' +
+    percent(primary) +
+    "</strong></div><div><span>Baseline</span><strong>" +
+    percent(baseline) +
+    "</strong></div><div><span>Difference</span><strong>" +
+    (difference >= 0 ? "+" : "") +
+    percent(difference) +
+    '</strong></div></div><div class="playground-result-actions"><span>' +
+    (result.audit.trials
+      ? result.audit.trials.toLocaleString() + " simulation trials"
+      : result.primary.matchedCount.toLocaleString() + " matched records") +
+    '</span><button class="text-button" type="button" id="playground-review">Review full evidence</button></div>';
+};
+
+const openPlaygroundInStudio = () => {
+  source.value = buildPlaygroundSource();
+  updateLines();
+  resetOutput();
+  saveState.textContent = "Built in Playground";
+  if (lastPlaygroundResponse) {
+    showDiagnostics(lastPlaygroundResponse.diagnostics);
+    showPlan(lastPlaygroundResponse.plan);
+    sql.textContent = lastPlaygroundResponse.sql
+      ? lastPlaygroundResponse.sql.text +
+        "\n\nParameters: " +
+        JSON.stringify(lastPlaygroundResponse.sql.parameters, null, 2)
+      : "No SQL was generated.";
+    if (lastPlaygroundResponse.result)
+      showEvidence(lastPlaygroundResponse.result);
+  }
+  showView("studio");
+};
+
+element("#playground-form").addEventListener("change", updatePlayground);
+element("#playground-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const buttons = elements("#playground-form button");
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+  playgroundResult.innerHTML =
+    '<div class="playground-loading">Running the checked study…</div>';
+  const generatedSource = buildPlaygroundSource();
+  try {
+    const response = await fetch("/api/study", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ source: generatedSource, action: "run" }),
+    });
+    const value = await response.json();
+    lastPlaygroundResponse = value;
+    if (value.result) {
+      showPlaygroundResult(value.result);
+      saveRun(value.result, generatedSource);
+      showToast("Playground study complete.");
+    } else {
+      const issue = value.diagnostics?.[0];
+      playgroundResult.innerHTML =
+        '<div class="playground-error"><strong>The study did not run.</strong><p>' +
+        escapeHtml(
+          issue?.message || value.error || "Check the selected values.",
+        ) +
+        "</p></div>";
+    }
+  } catch {
+    playgroundResult.innerHTML =
+      '<div class="playground-error"><strong>The study did not run.</strong><p>The playground could not reach the compiler.</p></div>';
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+});
+
+element("#playground-open").addEventListener("click", openPlaygroundInStudio);
+playgroundResult.addEventListener("click", (event) => {
+  if (event.target.closest("#playground-review")) openPlaygroundInStudio();
+});
+element("#playground-reset").addEventListener("click", () => {
+  playgroundOutcome.value = "swing and miss";
+  playgroundPrevious.value = "fastball";
+  playgroundWindow.value = "2";
+  playgroundMethod.value = "simulation";
+  updatePlayground();
+  showToast("Playground reset.");
 });
 
 const renderHistory = () => {
@@ -680,6 +855,7 @@ const loadExample = async () => {
 loadExample();
 loadResources();
 renderHistory();
+updatePlayground();
 const initialView = location.hash.slice(1);
-if (["guide", "resources", "history"].includes(initialView))
+if (["playground", "guide", "resources", "history"].includes(initialView))
   showView(initialView);

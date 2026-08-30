@@ -54,8 +54,71 @@ test("opens the guide and trusted resource catalog", async ({
   await expect(
     page.getByRole("heading", { name: "Data and methods" }),
   ).toBeVisible();
-  await expect(page.getByText("approved demo outcome")).toBeVisible();
-  await expect(page.getByText("adaptive simulation")).toBeVisible();
+  const resources = page.locator("#resource-content");
+  await expect(resources.getByText("approved demo outcome")).toBeVisible();
+  await expect(resources.getByText("adaptive simulation")).toBeVisible();
+});
+
+test("runs an automatic simulation in the playground", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  if (testInfo.project.name === "mobile") {
+    await page.getByRole("button", { name: "Open navigation" }).click();
+  }
+  await page.getByRole("button", { name: "Playground" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Build a study without code" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Generated SeamScript")).toContainText(
+    "method: simulation",
+  );
+
+  await page.getByRole("button", { name: "Run playground" }).click();
+  const result = page.locator("#playground-result");
+  await expect(result.getByText("simulated chance")).toBeVisible();
+  await expect(result.getByText("40,000 simulation trials")).toBeVisible();
+  await expect(result.locator(".playground-chance strong")).toHaveText(
+    /\d+\.\d%/,
+  );
+  await expect(page.locator("body")).not.toContainText("seed");
+  await page.screenshot({
+    path: `output/playwright/playground-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
+
+  await result.getByRole("button", { name: "Review full evidence" }).click();
+  await expect(page.getByLabel("SeamScript source")).toHaveValue(
+    /Fastball before slider for swing and miss/,
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Fastball before slider for swing and miss",
+    }),
+  ).toBeVisible();
+});
+
+test("runs changed playground choices with an approved model", async ({
+  page,
+}) => {
+  await page.goto("/#playground");
+  await page.getByLabel("Target event").selectOption("contact");
+  await page.getByLabel("Previous pitch").selectOption("curveball");
+  await page.getByLabel("Lookback").selectOption("1");
+  await page.getByLabel("Evidence method").selectOption("model");
+  const generated = page.getByLabel("Generated SeamScript");
+  await expect(generated).toContainText("outcome: contact");
+  await expect(generated).toContainText("sequence: curveball");
+  await expect(generated).toContainText("window: 1 pitch");
+  await expect(generated).toContainText("method: model");
+
+  await page.getByRole("button", { name: "Run playground" }).click();
+  const result = page.locator("#playground-result");
+  await expect(result.getByText("model chance")).toBeVisible();
+  await expect(result.getByText("matched records")).toBeVisible();
+  await expect(
+    result.getByText("Curveball before slider for contact"),
+  ).toBeVisible();
 });
 
 test("saves completed work in local history", async ({ page }, testInfo) => {
