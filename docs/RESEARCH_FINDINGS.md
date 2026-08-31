@@ -1,127 +1,156 @@
-# Pitch-sequence research findings
+# Next-pitch decision research
 
 Review date: August 30, 2026.
 
 ## Product conclusion
 
-Prioritize short-horizon prediction and clear comparison evidence.
+Prioritize one-pitch outcome prediction.
 
-Do not promise an optimal pitch or a causal sequence effect.
+Add recommendation as a controlled ranking task.
 
-The data supports useful prediction. It does not capture the complete decision.
+Do not start with long pitch-sequence simulation.
 
-## What current methods do well
+Do not compare a prior pitch with an artificial exclusion group.
 
-### Short event prediction
+The live decision has two useful forms.
 
-Recent models can estimate near-term pitch results from pitch history and context.
+1. Estimate all outcomes for one pitch call.
+2. Rank available pitch calls for one result.
 
-One 2026 preprint reported a 0.811 ROC AUC for its binary task.
+## Required inputs
 
-That score measures discrimination. It does not prove calibrated probabilities.
+The model needs the pitcher, batter, count, and prior pitch.
 
-The study used MLB data and one main swing-out objective.
+It also needs the intended pitch type and location.
 
-Its authors call for more objectives, external tests, and clear explanations.
+Outs, runners, and score can change the value of an outcome.
 
-[Counterfactual pitch-sequence study](https://arxiv.org/abs/2606.17345)
+Public Statcast provides players, pitch type, pitch result, count, outs, runners, and score.
 
-### Physical contrast
+It also provides delivered pitch location and pitch movement.
 
-Speed, movement, and location changes contain useful sequence information.
+[Statcast CSV documentation](https://baseballsavant.mlb.com/csv-docs)
 
-Earlier work linked lower pitch predictability with higher strikeout rates.
+## What current methods support
 
-Its context was limited. SeamScript therefore adds count, batter, pitcher, and game facts.
+### One-pitch outcome models
 
-[Pitch predictability study](https://journals.sagepub.com/doi/full/10.3233/JSA-170103)
+Models can estimate contact, called-strike, and run outcomes.
 
-### Repeated sequence patterns
+Flexible models can use players, location, count, outs, runners, and score.
 
-Large Statcast samples reveal stable sequence motifs.
+Bayesian methods can also carry uncertainty through the decision.
 
-The same motifs do not directly explain broad results, such as ERA or wins.
+[Bayesian plate-discipline study](https://arxiv.org/abs/2305.05752)
 
-SeamScript treats motifs as conditions. It does not treat them as complete explanations.
+### Pitch-call evaluation
 
-[Pitch-pattern motif study](https://arxiv.org/pdf/2601.11904)
+An at-bat can use a stochastic decision model.
 
-### Context adjustment
+The hard parts are location execution, swing behavior, and outcome prediction.
 
-Pitch choice depends on count, batter, pitcher, and game state.
+The pitch call must include intended location.
 
-Matched groups and propensity methods can reduce clear selection differences.
+[Optimal pitching strategy study](https://arxiv.org/abs/2110.04321)
 
-They cannot remove unknown intent or all unmeasured context.
+### Counterfactual pitch testing
 
-[Propensity-score study](https://arxiv.org/abs/2208.03492)
+A model can replace a candidate pitch while it holds the situation fixed.
+
+A 2026 study tested pitch type and location this way.
+
+The study optimized one-pitch in-play or swing-out predictions.
+
+[Counterfactual pitch study](https://arxiv.org/abs/2606.17345)
+
+### Context and history
+
+Count is a strong input for pitch selection and outcome.
+
+Prior pitch speed, movement, and location can add useful information.
+
+The previous pitch is a direct fact.
+
+A user does not need an artificial lookback window for the first product.
+
+[Pitch type and location study](https://journals.sagepub.com/doi/10.3233/JSA-200559)
 
 ## Main limits
 
-### Public data shows delivery, not the complete call
+### A pitch call is not the delivered pitch
 
-Statcast records the delivered pitch and result.
+The catcher can request one location.
 
-It does not reliably show the intended location or the call source.
+The pitcher can deliver another location.
 
-A catcher review therefore needs private call and target data.
+A production model must estimate execution error around the target.
 
-[Statcast field documentation](https://baseballsavant.mlb.com/csv-docs)
+Public data does not reliably contain the intended target.
 
-### Long simulations compound error
+Team call and target data is necessary for catcher evaluation.
 
-Each simulated step uses another prediction and another policy choice.
+### Recommendation needs a clear goal
 
-Error increases as the path grows.
+The best call depends on the goal.
 
-The first release therefore prioritizes one-pitch events.
+Maximizing a called strike can differ from avoiding a hit.
 
-[World-model study](https://arxiv.org/pdf/2602.07030)
+Run value is better than one event for full game strategy.
 
-### Player-pair data is sparse
+The first interface keeps goals explicit.
 
-Many pitcher-batter pairs have few shared pitches.
+### Outcome labels must not overlap
 
-Isolated pair models can become unstable.
+`strike` can include a called strike, a miss, or a foul.
 
-Use pooled batter and pitcher history by default.
+The product therefore returns six separate outcomes.
 
-### A strong score is not probability calibration
+The six chances total 100%.
 
-Accuracy, F1, and ROC AUC do not test probability reliability.
+`any strike` is an optional combined recommendation goal.
 
-Production models need Brier score, log loss, and reliability checks.
+### Probability quality matters
 
-The demonstration model passes only a synthetic calibration check.
+Accuracy and ROC AUC do not prove reliable probabilities.
 
-### Observed differences are not causal effects
+Production models need log loss, Brier score, and calibration plots.
 
-The pitcher chose each pitch for a reason.
+They also need time-based tests and player holdout tests.
 
-Matching controls known facts only.
+### Recommendation is not causation
 
-SeamScript reports a matched difference. It does not report a causal effect.
+Historical pitch calls reflect hidden intent and game plans.
+
+A model recommendation is a counterfactual estimate.
+
+It is not proof that the pitch causes the outcome.
+
+### Long paths compound error
+
+Each added pitch needs another policy and outcome prediction.
+
+Error increases along the path.
+
+The first release stops after one pitch.
 
 ## Capability order
 
-1. Compile a readable one-pitch question.
-2. Enforce plate-appearance boundaries and feature timing.
-3. Show observed rates and matched differences.
-4. Use an approved, frozen model version.
-5. Run automatic one-pitch simulations.
-6. Show data, model, and simulation uncertainty separately.
-7. Add private call and intended-location data.
-8. Add plate-appearance paths after policy and calibration tests.
-9. Add in-game advice after latency and reliability tests.
+1. Predict a complete one-pitch outcome distribution.
+2. Include pitch type and intended location.
+3. Use exact pre-pitch facts.
+4. Show calibration and uncertainty.
+5. Rank calls from the pitcher's arsenal.
+6. Connect private call and target data.
+7. Add run-value goals.
+8. Add in-game use after latency and reliability tests.
+9. Add multi-pitch planning after policy tests.
 
-## Data scope
+## Demonstration status
 
-The demonstration uses synthetic 2023 through 2025 data.
+The offline model is illustrative.
 
-A real study should use a time-based train and test split.
+Its data is synthetic.
 
-Bat tracking is optional because public coverage starts in 2024.
+Its simulation range covers simulation error only.
 
-The 2026 ABS change can also create a new data period.
-
-[Statcast overview](https://www.mlb.com/glossary/statcast) · [Bat tracking](https://www.mlb.com/news/what-you-need-to-know-about-statcast-bat-tracking) · [2026 ABS rules](https://www.mlb.com/press-release/press-release-mlb-announces-abs-challenge-system-coming-to-the-major-leagues-beginning-in-the-2026-season)
+It does not show model or data uncertainty.

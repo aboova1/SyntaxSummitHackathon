@@ -36,6 +36,15 @@ describe("browser server", () => {
     expect(await response.text()).toContain("SeamScript Studio");
   });
 
+  it("serves the baseball mark", async () => {
+    const origin = await start();
+    const response = await fetch(`${origin}/baseball.svg`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("image/svg+xml");
+    expect(await response.text()).toContain("<circle");
+  });
+
   it("runs edited source only against the trusted demonstration catalog", async () => {
     const origin = await start();
     const example = (await (await fetch(`${origin}/api/example`)).json()) as {
@@ -50,7 +59,9 @@ describe("browser server", () => {
     const serialized = JSON.stringify(body);
 
     expect(response.status).toBe(200);
-    expect(serialized).toContain("simulated chance");
+    expect(serialized).toContain("pitch decision");
+    expect(serialized).toContain("swing and miss");
+    expect(serialized).toContain('"trials":40000');
     expect(serialized).not.toContain("protectedAudit");
     expect(serialized).not.toContain("seed");
   });

@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Run a complete SeamScript baseball simulation without a server."
+    />
+    <title>SeamScript Offline Playground</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="offline-body">
+    <div class="app-shell">
+      <aside class="app-rail" id="app-rail" aria-label="Main navigation">
+        <div class="workspace-brand">
+          <img class="workspace-mark" src="./baseball.svg" alt="" />
+          <span><strong>SeamScript</strong><small>Decision studio</small></span>
+        </div>
+        <nav class="rail-nav">
+          <p class="nav-label">Workspace</p>
+          <a class="nav-item" href="./index.html#playground">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M9 3v5l-5 9a2.5 2.5 0 0 0 2.2 4h11.6A2.5 2.5 0 0 0 20 17l-5-9V3M8 13h8M8 3h8"
+              />
+            </svg>
+            <span>Playground</span>
+          </a>
+          <a
+            class="nav-item nav-active"
+            href="./offline.html"
+            aria-current="page"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" />
+            </svg>
+            <span>Offline demo</span>
+          </a>
+          <a class="nav-item" href="./index.html#studio">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 5h16v14H4zM8 9l3 3-3 3m5 0h3" />
+            </svg>
+            <span>Studio</span>
+          </a>
+          <a class="nav-item" href="./index.html#guide">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Zm3 12h11M9 8h6"
+              />
+            </svg>
+            <span>Language guide</span>
+          </a>
+          <a class="nav-item" href="./index.html#resources">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="6" rx="8" ry="3" />
+              <path
+                d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6m-16 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"
+              />
+            </svg>
+            <span>Resources</span>
+          </a>
+          <a class="nav-item" href="./index.html#history">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6M12 8v5l3 2" />
+            </svg>
+            <span>History</span>
+          </a>
+          <div class="rail-note">
+            <span class="status-dot positive" aria-hidden="true"></span>
+            <div>
+              <strong>Ready offline</strong>
+              <small>No install or server</small>
+            </div>
+          </div>
+        </nav>
+        <div class="rail-footer">
+          <button
+            class="rail-action"
+            id="offline-theme"
+            aria-label="Use dark theme"
+          >
+            <svg class="moon-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M20 15.5A8 8 0 1 1 8.5 4 6.5 6.5 0 0 0 20 15.5Z" />
+            </svg>
+            <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+              />
+            </svg>
+            <span>Theme</span>
+          </button>
+          <div class="rail-version">
+            <span>v0.4</span><span>Static demo</span>
+          </div>
+        </div>
+      </aside>
+      <div class="mobile-overlay" id="mobile-overlay"></div>
+      <section class="app-main">
+        <header class="mobile-topbar">
+          <button
+            class="icon-button"
+            id="menu-button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <span>
+            <img class="workspace-mark" src="./baseball.svg" alt="" />
+            <strong>SeamScript</strong>
+          </span>
+          <span class="status-dot positive" aria-label="Ready offline"></span>
+        </header>
+        <main class="content-scroll">
+          <section class="page narrow-page offline-page">
+            <header class="page-header">
+              <div>
+                <h1>Make the next pitch decision offline</h1>
+                <p class="page-description">
+                  Select a matchup. SeamScript writes the study and runs 40,000
+                  local trials.
+                </p>
+              </div>
+            </header>
+
+            <aside class="offline-notice">
+              <strong>Offline demonstration.</strong>
+              <span>
+                This page uses synthetic data and a local model. It makes no
+                network calls.
+              </span>
+            </aside>
+
+            <div class="playground-layout offline-layout">
+              <form class="playground-form" id="offline-form">
+                <div class="section-heading">
+                  <div>
+                    <h2>Question</h2>
+                    <p>Each input has one clear function.</p>
+                  </div>
+                </div>
+                <fieldset class="task-switch" aria-label="Question type">
+                  <legend>Question type</legend>
+                  <label
+                    ><input
+                      type="radio"
+                      name="offline-task"
+                      value="predict"
+                      checked
+                    /><span
+                      ><strong>Predict outcomes</strong
+                      ><small>Test one next pitch.</small></span
+                    ></label
+                  >
+                  <label
+                    ><input
+                      type="radio"
+                      name="offline-task"
+                      value="recommend"
+                    /><span
+                      ><strong>Recommend a pitch</strong
+                      ><small>Find the best call for one goal.</small></span
+                    ></label
+                  >
+                </fieldset>
+                <div class="form-section">
+                  <div class="form-step">
+                    <span>01</span><strong>Matchup</strong>
+                  </div>
+                  <div>
+                    <div class="form-fields">
+                      <label
+                        ><span>Pitcher</span
+                        ><select
+                          id="offline-pitcher"
+                          aria-label="Pitcher"
+                        ></select
+                        ><small
+                          >The records and pitch quality come from this
+                          pitcher.</small
+                        ></label
+                      >
+                      <label
+                        ><span>Batter</span
+                        ><select
+                          id="offline-batter"
+                          aria-label="Batter"
+                        ></select
+                        ><small
+                          >The contact and chase inputs come from this
+                          batter.</small
+                        ></label
+                      >
+                    </div>
+                    <div class="matchup-visual" id="offline-matchup"></div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="form-step">
+                    <span>02</span><strong>Decision</strong>
+                  </div>
+                  <div>
+                    <div class="form-fields" id="offline-predict-fields">
+                      <label
+                        ><span>Next pitch</span
+                        ><select
+                          id="offline-next-pitch"
+                          aria-label="Next pitch"
+                        >
+                          <option value="four-seam fastball">
+                            Four-Seam Fastball
+                          </option>
+                          <option value="sinker">Sinker</option>
+                          <option value="slider" selected>Slider</option>
+                          <option value="sweeper">Sweeper</option>
+                          <option value="curveball">Curveball</option>
+                          <option value="changeup">Changeup</option></select
+                        ><small>This is the pitch call to test.</small></label
+                      >
+                      <label
+                        ><span>Target location</span
+                        ><select
+                          id="offline-target-location"
+                          aria-label="Target location"
+                        >
+                          <option value="high and inside">
+                            High and inside
+                          </option>
+                          <option value="high and away">High and away</option>
+                          <option value="middle">Middle</option>
+                          <option value="low and inside">Low and inside</option>
+                          <option value="low and away" selected>
+                            Low and away
+                          </option></select
+                        ><small
+                          >The model includes normal execution error around this
+                          target.</small
+                        ></label
+                      >
+                    </div>
+                    <div
+                      class="form-fields one-column"
+                      id="offline-recommend-fields"
+                      hidden
+                    >
+                      <label
+                        ><span>Desired result</span
+                        ><select id="offline-goal" aria-label="Desired result">
+                          <option value="swing and miss">Swing and miss</option>
+                          <option value="called strike">Called strike</option>
+                          <option value="any strike">Any strike</option>
+                          <option value="out in play">
+                            Out in play
+                          </option></select
+                        ><small
+                          >The model ranks calls from this pitcher’s
+                          arsenal.</small
+                        ></label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="form-step">
+                    <span>03</span><strong>Game state</strong>
+                  </div>
+                  <div>
+                    <div class="form-fields">
+                      <label
+                        ><span>Count</span
+                        ><select id="offline-count" aria-label="Count">
+                          <option>0-0</option>
+                          <option>0-1</option>
+                          <option>0-2</option>
+                          <option>1-0</option>
+                          <option>1-1</option>
+                          <option selected>1-2</option>
+                          <option>2-0</option>
+                          <option>2-1</option>
+                          <option>2-2</option>
+                          <option>3-0</option>
+                          <option>3-1</option>
+                          <option>3-2</option></select
+                        ><small
+                          >This is the count before the next pitch.</small
+                        ></label
+                      >
+                      <label
+                        ><span>Previous pitch</span
+                        ><select
+                          id="offline-previous"
+                          aria-label="Previous pitch"
+                        >
+                          <option value="none">None</option>
+                          <option value="four-seam fastball" selected>
+                            Four-Seam Fastball
+                          </option>
+                          <option value="sinker">Sinker</option>
+                          <option value="slider">Slider</option>
+                          <option value="sweeper">Sweeper</option>
+                          <option value="curveball">Curveball</option>
+                          <option value="changeup">Changeup</option></select
+                        ><small
+                          >This is the last pitch in this plate
+                          appearance.</small
+                        ></label
+                      >
+                    </div>
+                    <div class="form-fields matchup-filters">
+                      <label
+                        ><span>Previous location</span
+                        ><select
+                          id="offline-previous-location"
+                          aria-label="Previous location"
+                        >
+                          <option value="high and inside" selected>
+                            High and inside
+                          </option>
+                          <option value="high and away">High and away</option>
+                          <option value="middle">Middle</option>
+                          <option value="low and inside">Low and inside</option>
+                          <option value="low and away">
+                            Low and away
+                          </option></select
+                        ><small>This describes the last pitch.</small></label
+                      >
+                      <label
+                        ><span>Previous result</span
+                        ><select
+                          id="offline-previous-result"
+                          aria-label="Previous result"
+                        >
+                          <option value="ball">Ball</option>
+                          <option value="called strike">Called strike</option>
+                          <option value="swing and miss">Swing and miss</option>
+                          <option value="foul" selected>Foul</option>
+                          <option value="in play">In play</option></select
+                        ><small>This describes the last pitch.</small></label
+                      >
+                    </div>
+                    <div class="form-fields context-grid">
+                      <label
+                        ><span>Outs</span
+                        ><select id="offline-outs" aria-label="Outs">
+                          <option value="0">0</option>
+                          <option value="1" selected>1</option>
+                          <option value="2">2</option>
+                        </select></label
+                      >
+                      <label
+                        ><span>Runners</span
+                        ><select id="offline-runners" aria-label="Runners">
+                          <option value="empty">Bases empty</option>
+                          <option value="first" selected>First</option>
+                          <option value="second">Second</option>
+                          <option value="third">Third</option>
+                          <option value="first and second">
+                            First and second
+                          </option>
+                          <option value="loaded">Bases loaded</option>
+                        </select></label
+                      >
+                      <label
+                        ><span>Score</span
+                        ><select id="offline-score" aria-label="Score">
+                          <option value="ahead">Pitching team ahead</option>
+                          <option value="tied" selected>Tied</option>
+                          <option value="behind">Pitching team behind</option>
+                        </select></label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="offline-method">
+                  <div>
+                    <span class="method-icon">40K</span>
+                    <div>
+                      <strong>Automatic simulation</strong>
+                      <p>
+                        The page runs 40,000 trials and calculates a 95%
+                        simulation range.
+                      </p>
+                    </div>
+                  </div>
+                  <span>Local</span>
+                </div>
+                <div class="playground-actions">
+                  <button class="button" type="button" id="offline-reset">
+                    Reset
+                  </button>
+                  <button class="button button-primary" type="submit">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="m9 7 8 5-8 5V7Z" />
+                    </svg>
+                    Run simulation
+                  </button>
+                </div>
+              </form>
+
+              <div class="playground-output offline-output" id="offline-output">
+                <header class="output-toolbar">
+                  <div
+                    class="output-tabs"
+                    role="tablist"
+                    aria-label="Decision output"
+                  >
+                    <button
+                      class="output-tab active"
+                      type="button"
+                      role="tab"
+                      data-output-tab="result"
+                      aria-selected="true"
+                    >
+                      Decision
+                    </button>
+                    <button
+                      class="output-tab"
+                      type="button"
+                      role="tab"
+                      data-output-tab="source"
+                      aria-selected="false"
+                    >
+                      Source
+                    </button>
+                  </div>
+                  <span class="output-status" id="offline-status"
+                    ><span class="status-dot positive" aria-hidden="true"></span
+                    >Ready offline</span
+                  >
+                </header>
+                <section
+                  class="output-panel active"
+                  data-output-panel="result"
+                  role="tabpanel"
+                >
+                  <section
+                    class="playground-result"
+                    id="offline-result"
+                    aria-live="polite"
+                  ></section>
+                </section>
+                <section
+                  class="output-panel"
+                  data-output-panel="source"
+                  role="tabpanel"
+                  hidden
+                >
+                  <section class="preview-section">
+                    <div class="section-heading">
+                      <div>
+                        <h2>Generated study</h2>
+                        <p>Every input updates this readable source.</p>
+                      </div>
+                      <span class="offline-file">matchup.seam</span>
+                    </div>
+                    <pre
+                      id="offline-source"
+                      aria-label="Generated SeamScript"
+                    ></pre>
+                  </section>
+                </section>
+              </div>
+            </div>
+            <footer class="offline-footer">
+              <span
+                >Synthetic data · Demonstration model · No network access</span
+              >
+              <a href="./index.html#guide">Read the language guide</a>
+            </footer>
+          </section>
+        </main>
+      </section>
+    </div>
+    <script defer src="./offline.js"></script>
+  </body>
+</html>

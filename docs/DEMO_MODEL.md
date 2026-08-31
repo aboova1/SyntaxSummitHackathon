@@ -2,19 +2,29 @@
 
 ## Purpose
 
-The built-in model tests the complete SeamScript runtime.
+The built-in models test the complete SeamScript runtime.
 
-It is a transparent logistic rule set.
+They use transparent probability rules.
 
-It is not a production baseball model.
+They are not production baseball models.
 
 ## Inputs
 
-The model uses selected pre-pitch facts.
+The next-pitch model uses selected pre-pitch facts.
+
+It returns ball, called strike, swing-and-miss, foul, out-in-play, and hit chances.
+
+These separate chances total 100%.
+
+It tests a pitch type and intended target location.
+
+Recommendation mode tests calls from the pitcher's synthetic arsenal.
 
 They cover batter history, pitcher form, pitch shape, sequence, count, park, and catcher history.
 
-The source list is in `src/runtime/model.ts`.
+The next-pitch source is in `src/decision.ts`.
+
+The legacy study model is in `src/runtime/model.ts`.
 
 ## Synthetic check
 

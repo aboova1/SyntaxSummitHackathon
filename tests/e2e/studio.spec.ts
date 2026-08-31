@@ -1,65 +1,53 @@
+import { pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 
-test("runs a checked study and hides protected controls", async ({
-  page,
-}, testInfo) => {
-  const browserErrors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") browserErrors.push(message.text());
-  });
-  page.on("pageerror", (error) => browserErrors.push(error.message));
+const openNavigation = async (
+  page: import("@playwright/test").Page,
+  projectName: string,
+) => {
+  if (projectName === "mobile")
+    await page.getByRole("button", { name: "Open navigation" }).click();
+};
+
+test("runs a direct next-pitch study in Studio", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Pitch sequence study" }),
+    page.getByRole("heading", { name: "Next pitch decision" }),
   ).toBeVisible();
-  await expect(page.getByLabel("SeamScript source")).toHaveValue(/target:/);
+  await expect(page.getByLabel("SeamScript source")).toHaveValue(/situation:/);
+  await expect(page.getByLabel("SeamScript source")).toHaveValue(
+    /outcomes for: slider/,
+  );
 
   await page.getByRole("button", { name: "Run study" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Fastball before slider" }),
-  ).toBeVisible();
-  await expect(page.locator(".lead-metric strong")).toHaveText(/\d+\.\d%/);
-  await expect(page.getByText("40,000")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Primary target zone" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Example target pitches" }),
-  ).toBeVisible();
+  await expect(page.getByText("Outcome forecast for Slider")).toBeVisible();
+  await expect(page.locator("#evidence .outcome-row")).toHaveCount(6);
+  await expect(page.getByText("40,000 trials")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("seed");
-  await page.screenshot({
-    path: `output/playwright/studio-${testInfo.project.name}.png`,
-    fullPage: true,
-  });
-  expect(browserErrors).toEqual([]);
 });
 
-test("opens the guide and trusted resource catalog", async ({
+test("shows the new language formula and resources", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
-  if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Open navigation" }).click();
-  }
+  await openNavigation(page, testInfo.project.name);
   await page.getByRole("button", { name: "Language guide" }).click();
+  await expect(page.getByText("outcomes for: slider")).toBeVisible();
+  await expect(page.getByText("best pitch for: swing and miss")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "One form. One meaning." }),
+    page.getByText(
+      "The situation states facts. The question states the requested result.",
+    ),
   ).toBeVisible();
-  await expect(page.getByText("The target is never a fact.")).toBeVisible();
 
-  if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Open navigation" }).click();
-  }
+  await openNavigation(page, testInfo.project.name);
   await page.getByRole("button", { name: "Resources" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Data and methods" }),
-  ).toBeVisible();
-  const resources = page.locator("#resource-content");
-  await expect(resources.getByText("approved demo event")).toBeVisible();
-  await expect(resources.getByText("adaptive simulation")).toBeVisible();
+  await expect(page.locator("#resource-content")).toContainText(
+    "approved demo event",
+  );
 });
 
-test("runs an automatic simulation in the playground", async ({
+test("predicts all outcomes for one live pitch call", async ({
   page,
 }, testInfo) => {
   const browserErrors: string[] = [];
@@ -67,197 +55,124 @@ test("runs an automatic simulation in the playground", async ({
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  await page.goto("/");
-  if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Open navigation" }).click();
-  }
-  await page.getByRole("button", { name: "Playground" }).click();
+  await page.goto("/#playground");
   await expect(
-    page.getByRole("heading", { name: "Build a study without code" }),
+    page.getByRole("heading", { name: "Make the next pitch decision" }),
   ).toBeVisible();
   await page.getByLabel("Pitcher").selectOption("P100");
   await page.getByLabel("Batter", { exact: true }).selectOption("B100");
-  await expect(page.getByLabel("Previous pitch").locator("option")).toHaveText([
-    "Four-Seam Fastball",
-    "Sinker",
-    "Curveball",
-    "Changeup",
-  ]);
-  const matchup = page.locator("#matchup-visual");
-  await expect(matchup.getByText("Alex Morgan")).toBeVisible();
-  await expect(matchup.getByText("Taylor Kim")).toBeVisible();
-  await expect(
-    matchup.locator(".player-metrics").first().getByText("Slider"),
-  ).toBeVisible();
-  await expect(
-    matchup.locator(".player-metrics").last().getByText("Contact"),
-  ).toBeVisible();
+  await page.getByLabel("Count").selectOption("1-2");
+  await page.getByLabel("Previous pitch").selectOption("four-seam fastball");
+  await page.getByLabel("Next pitch", { exact: true }).selectOption("slider");
+  await page.getByLabel("Target location").selectOption("low and away");
   await expect(page.getByLabel("Generated SeamScript")).toContainText(
-    "evidence: simulation",
+    "situation:",
   );
   await expect(page.getByLabel("Generated SeamScript")).toContainText(
-    "pitchers: P100",
-  );
-  await expect(page.getByLabel("Generated SeamScript")).toContainText(
-    "batters: B100",
+    "outcomes for: slider",
   );
 
-  await page.getByRole("button", { name: "Run playground" }).click();
-  const result = page.locator("#playground-result");
-  await expect(result.getByText("simulated chance")).toBeVisible({
-    timeout: 20_000,
-  });
-  await expect(result.getByText("40,000 simulation trials")).toBeVisible();
-  await expect(result.locator(".playground-chance strong")).toHaveText(
-    /\d+\.\d%/,
-  );
+  await page.getByRole("button", { name: "Run decision" }).click();
+  const result = page.locator("#decision-result");
+  await expect(result.getByText("Outcome forecast")).toBeVisible();
+  const output = page.locator("#decision-output");
+  await output.getByRole("tab", { name: "Source" }).click();
+  await expect(page.getByLabel("Generated SeamScript")).toBeVisible();
+  await expect(result).toBeHidden();
+  await output.getByRole("tab", { name: "Decision" }).click();
+  await expect(result).toBeVisible();
+  await expect(result.locator(".outcome-row")).toHaveCount(6);
+  await expect(result).toContainText("40,000 automatic trials");
   await expect(page.locator("body")).not.toContainText("seed");
-  await page.screenshot({
-    path: `output/playwright/playground-${testInfo.project.name}.png`,
-    fullPage: true,
-  });
+  const barWidths = await result
+    .locator(".outcome-track i")
+    .evaluateAll((items) =>
+      items.map((item) => item.getBoundingClientRect().width),
+    );
+  expect(new Set(barWidths.map(Math.round)).size).toBeGreaterThan(2);
+  expect(browserErrors).toEqual([]);
+
   const sizes = await page.evaluate(() => ({
     width: document.documentElement.clientWidth,
     scroll: document.documentElement.scrollWidth,
   }));
   expect(sizes.scroll).toBeLessThanOrEqual(sizes.width + 1);
-  expect(browserErrors).toEqual([]);
-
-  await result.getByRole("button", { name: "Review full evidence" }).click();
-  await expect(page.getByLabel("SeamScript source")).toHaveValue(
-    /Alex Morgan versus Taylor Kim: four-seam fastball before slider for swing and miss/,
-  );
-  await expect(
-    page.getByRole("heading", {
-      name: "Alex Morgan versus Taylor Kim: four-seam fastball before slider for swing and miss",
-    }),
-  ).toBeVisible();
+  await page.screenshot({
+    path: `output/playwright/decision-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
 });
 
-test("runs changed playground choices with an approved model", async ({
+test("recommends three calls for one goal", async ({ page }) => {
+  await page.goto("/#playground");
+  await page.locator(".task-switch label").nth(1).click();
+  await page.getByLabel("Desired result").selectOption("swing and miss");
+  await expect(page.getByLabel("Generated SeamScript")).toContainText(
+    "best pitch for: swing and miss",
+  );
+  await page.getByRole("button", { name: "Run decision" }).click();
+  const result = page.locator("#decision-result");
+  await expect(result.getByText("Recommended call")).toBeVisible();
+  await expect(result.locator(".recommend-list article")).toHaveCount(3);
+  await expect(result).toContainText("Arsenal only");
+});
+
+test("runs the playground from a local file", async ({ page }, testInfo) => {
+  const offlinePath = pathToFileURL(
+    `${process.cwd()}/web/offline.html`,
+  ).toString();
+  await page.goto(offlinePath);
+  await expect(
+    page.getByRole("heading", { name: "Make the next pitch decision offline" }),
+  ).toBeVisible();
+  await expect(page.locator(".rail-nav .nav-item")).toHaveText([
+    "Playground",
+    "Offline demo",
+    "Studio",
+    "Language guide",
+    "Resources",
+    "History",
+  ]);
+  expect(
+    await page
+      .locator(".workspace-brand img.workspace-mark")
+      .evaluate((image) => image.complete && image.naturalWidth > 0),
+  ).toBe(true);
+  await expect(page.getByText("No network calls")).toBeVisible();
+  await page.getByRole("button", { name: "Run simulation" }).click();
+  await expect(page.locator("#offline-result .outcome-row")).toHaveCount(6);
+  await expect(page.locator("#offline-result")).toContainText("40,000 trials");
+
+  await page.locator(".task-switch label").nth(1).click();
+  await page.getByRole("button", { name: "Run simulation" }).click();
+  await expect(
+    page.locator("#offline-result .recommend-list article"),
+  ).toHaveCount(3);
+  await page.screenshot({
+    path: `output/playwright/offline-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("shows the server command when the live page opens as a file", async ({
   page,
 }) => {
-  await page.goto("/#playground");
-  await page.getByLabel("Pitcher").selectOption("P400");
-  await page.getByLabel("Batter", { exact: true }).selectOption("B105");
-  await page.getByLabel("Target event").selectOption("contact");
-  await page.getByLabel("Previous pitch").selectOption("curveball");
-  await page.getByLabel("Count group").selectOption("0-0, 1-1, 2-2");
-  await page.getByLabel("Batter side").selectOption("right");
-  await page.getByLabel("Lookback").selectOption("1");
-  await page.getByLabel("Evidence").selectOption("model");
-  const generated = page.getByLabel("Generated SeamScript");
-  await expect(generated).toContainText("event: contact");
-  await expect(generated).toContainText("pitchers: P400");
-  await expect(generated).toContainText("batters: B105");
-  await expect(generated).toContainText("after: curveball");
-  await expect(generated).toContainText("counts: 0-0, 1-1, 2-2");
-  await expect(generated).toContainText("batter sides: right");
-  await expect(generated).toContainText("lookback: 1 pitch");
-  await expect(generated).toContainText("evidence: model");
-
-  await page.getByRole("button", { name: "Run playground" }).click();
-  const result = page.locator("#playground-result");
-  await expect(result.getByText("model chance")).toBeVisible();
-  await expect(result.getByText("matched records")).toBeVisible();
+  const liveFile =
+    pathToFileURL(`${process.cwd()}/web/index.html`).toString() + "#playground";
+  await page.goto(liveFile);
+  const notice = page.locator("#server-required");
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("npm run app");
   await expect(
-    result.getByText(
-      "Casey Brooks versus Avery Johnson: curveball before slider for contact",
-    ),
+    page.getByRole("link", { name: "Use the offline demo" }),
   ).toBeVisible();
-});
-
-test("saves completed work in local history", async ({ page }, testInfo) => {
-  await page.goto("/");
-  await expect(page.getByLabel("SeamScript source")).toHaveValue(/target:/);
-  await page.getByRole("button", { name: "Run study" }).click();
-  await expect(page.getByText("Study complete.")).toBeVisible();
-  if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Open navigation" }).click();
-  }
-  await page.getByRole("button", { name: "History" }).click();
-  await expect(page.getByRole("heading", { name: "Saved work" })).toBeVisible();
-  const history = page.locator("#history-content");
-  await expect(history.getByText("Fastball before slider")).toBeVisible();
-  await expect(history.getByText("simulated chance")).toBeVisible();
-  await history.getByRole("button", { name: "Open" }).click();
-  await expect(page.getByLabel("SeamScript source")).toHaveValue(
-    /Fastball before slider/,
-  );
-});
-
-test("keeps a saved draft after reload", async ({ page }) => {
-  await page.goto("/");
-  const editor = page.getByLabel("SeamScript source");
-  await expect(editor).toHaveValue(/Fastball before slider/);
-  await editor.fill(
-    (await editor.inputValue()).replace(
-      "Fastball before slider",
-      "Saved bullpen study",
-    ),
-  );
-  await page.getByRole("button", { name: "Save draft" }).click();
-  await page.reload();
-  await expect(editor).toHaveValue(/Saved bullpen study/);
-  await expect(page.getByText("saved-bullpen-study.seam")).toBeVisible();
 });
 
 test("keeps the selected theme after reload", async ({ page }, testInfo) => {
   await page.goto("/");
-  if (testInfo.project.name === "mobile") {
-    await page.getByRole("button", { name: "Open navigation" }).click();
-  }
+  await openNavigation(page, testInfo.project.name);
   await page.getByRole("button", { name: "Use dark theme" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await page.reload();
   await expect(page.locator("html")).toHaveClass(/dark/);
-});
-
-test("shows a useful compiler error", async ({ page }) => {
-  await page.goto("/");
-  const editor = page.getByLabel("SeamScript source");
-  await expect(editor).toHaveValue(/event: swing and miss/);
-  await editor.fill(
-    (await editor.inputValue()).replace(
-      "event: swing and miss",
-      "result: swing and miss",
-    ),
-  );
-  await page.getByRole("button", { name: "Check" }).click();
-
-  await expect(page.getByText("S202 · semantic")).toBeVisible();
-  await expect(page.getByText("Use 'event'.")).toBeVisible();
-});
-
-test("keeps the mobile page within its viewport", async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== "mobile", "Mobile layout check.");
-  await page.goto("/");
-  await page.getByRole("button", { name: "Run study" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Fastball before slider" }),
-  ).toBeVisible();
-  const sizes = await page.evaluate(() => ({
-    width: document.documentElement.clientWidth,
-    scroll: document.documentElement.scrollWidth,
-  }));
-  expect(sizes.scroll).toBeLessThanOrEqual(sizes.width + 1);
-});
-
-test("uses the mobile navigation drawer", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "mobile", "Mobile navigation check.");
-  await page.goto("/");
-  const menu = page.getByRole("button", { name: "Open navigation" });
-  await menu.click();
-  await expect(menu).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: "Language guide" }).click();
-  await expect(
-    page.getByRole("heading", { name: "One form. One meaning." }),
-  ).toBeVisible();
-  const sizes = await page.evaluate(() => ({
-    width: document.documentElement.clientWidth,
-    scroll: document.documentElement.scrollWidth,
-  }));
-  expect(sizes.scroll).toBeLessThanOrEqual(sizes.width + 1);
 });

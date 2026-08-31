@@ -11,6 +11,11 @@ import { parseCatalog } from "./catalog/load.js";
 import { executePlan } from "./runtime/execute.js";
 import { toPublicResult } from "./runtime/public-result.js";
 import { loadPlaygroundData } from "./playground-data.js";
+import {
+  parseDecisionSource,
+  runPitchDecision,
+  type PitchDecisionRequest,
+} from "./decision.js";
 
 const BODY_LIMIT = 256 * 1024;
 
@@ -52,7 +57,7 @@ export interface WebServerOptions {
 
 export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
   const webRoot = resolve(projectRoot, "web");
-  const studyPath = resolve(projectRoot, "examples/demo.seam");
+  const studyPath = resolve(projectRoot, "examples/decision.seam");
   const catalogPath = resolve(projectRoot, "examples/demo.catalog.yml");
   const dataPath = resolve(projectRoot, "data/sample-pitches.csv");
 
@@ -77,7 +82,7 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
         }
         const catalog = loaded.catalog;
         sendJson(response, 200, {
-          language: { name: "SeamScript", version: "0.3" },
+          language: { name: "SeamScript", version: "0.4" },
           catalog: { name: catalog.catalog, version: catalog.version },
           data: Object.entries(catalog.data).map(([name, item]) => ({
             name,
@@ -115,6 +120,30 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
         return;
       }
 
+      if (request.method === "POST" && url.pathname === "/api/decision") {
+        let body: PitchDecisionRequest;
+        try {
+          body = JSON.parse(await readBody(request)) as PitchDecisionRequest;
+        } catch {
+          sendJson(response, 400, {
+            error: "The request body must be valid JSON.",
+          });
+          return;
+        }
+        try {
+          const data = await loadPlaygroundData(dataPath);
+          sendJson(response, 200, { result: runPitchDecision(body, data) });
+        } catch (cause) {
+          sendJson(response, 422, {
+            error:
+              cause instanceof Error
+                ? cause.message
+                : "The decision did not run.",
+          });
+        }
+        return;
+      }
+
       if (request.method === "POST" && url.pathname === "/api/study") {
         let body: { source?: unknown; action?: unknown };
         try {
@@ -135,6 +164,57 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
         if (!["check", "compile", "run"].includes(String(body.action))) {
           sendJson(response, 400, {
             error: "The action must be check, compile, or run.",
+          });
+          return;
+        }
+
+        if (
+          /^situation:\s*$/mu.test(body.source) &&
+          /^question:\s*$/mu.test(body.source)
+        ) {
+          const data = await loadPlaygroundData(dataPath);
+          const parsed = parseDecisionSource(body.source, data);
+          const plan = parsed.request
+            ? {
+                nodes: [
+                  {
+                    kind: "read situation",
+                    description: "Read known pre-pitch facts.",
+                  },
+                  {
+                    kind: "build pitch calls",
+                    description:
+                      parsed.request.question.kind === "predict"
+                        ? "Build the selected pitch call."
+                        : "Build calls from the pitcher’s arsenal.",
+                  },
+                  {
+                    kind: "predict outcomes",
+                    description:
+                      "Estimate one complete outcome distribution for each call.",
+                  },
+                  {
+                    kind: "simulate outcomes",
+                    description: "Run 40,000 automatic trials for each call.",
+                  },
+                  {
+                    kind: "rank calls",
+                    description:
+                      parsed.request.question.kind === "recommend"
+                        ? "Rank calls by the selected goal."
+                        : "Keep the selected call.",
+                  },
+                ],
+              }
+            : undefined;
+          const result =
+            body.action === "run" && parsed.request
+              ? runPitchDecision(parsed.request, data)
+              : undefined;
+          sendJson(response, parsed.diagnostics.length ? 422 : 200, {
+            diagnostics: parsed.diagnostics,
+            plan,
+            ...(result ? { result } : {}),
           });
           return;
         }
@@ -172,7 +252,11 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
         "/": "index.html",
         "/index.html": "index.html",
         "/app.js": "app.js",
+        "/decision.js": "decision.js",
         "/styles.css": "styles.css",
+        "/baseball.svg": "baseball.svg",
+        "/offline.html": "offline.html",
+        "/offline.js": "offline.js",
       };
       const file = files[url.pathname];
       if (request.method !== "GET" || !file) {

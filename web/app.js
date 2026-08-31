@@ -310,6 +310,44 @@ const examplesTable = (rows) => {
 const showEvidence = (result) => {
   emptyState.hidden = true;
   evidence.hidden = false;
+  if (result.mode === "pitch decision") {
+    const call = result.selected;
+    const label = (value) =>
+      String(value).replace(/\b\w/g, (character) => character.toUpperCase());
+    const rows = call.outcomes
+      .map(
+        (item) =>
+          '<div class="outcome-row"><span>' +
+          escapeHtml(label(item.outcome)) +
+          '</span><div class="outcome-track"><i class="w-' +
+          Math.max(1, Math.min(20, Math.ceil(item.chance * 20))) +
+          '"></i></div><strong>' +
+          percent(item.chance) +
+          "</strong></div>",
+      )
+      .join("");
+    evidence.innerHTML =
+      '<div class="result-kicker"><span class="dot-label"><span class="status-dot positive"></span>Run complete</span><code>40,000 trials</code></div><h2 class="result-title">' +
+      escapeHtml(result.study) +
+      '</h2><p class="target-line">' +
+      (result.question.kind === "predict"
+        ? "Outcome forecast for " + label(call.pitch)
+        : "Best call for " + label(result.question.goal)) +
+      '</p><div class="decision-head"><div><span>Pitch call</span><h2>' +
+      escapeHtml(label(call.pitch) + " · " + label(call.location)) +
+      '</h2></div><div class="decision-lead"><span>' +
+      (result.question.kind === "recommend"
+        ? "Estimated goal chance"
+        : "Complete outcome distribution") +
+      "</span><strong>" +
+      (result.question.kind === "recommend"
+        ? percent(call.goalChance)
+        : "100%") +
+      '</strong></div></div><div class="outcome-list">' +
+      rows +
+      '</div><div class="notice">This result uses synthetic data. Its range covers simulation error only.</div>';
+    return;
+  }
   const primary = result.primary;
   const baseline = result.baseline;
   const selectedValue =
@@ -405,6 +443,20 @@ const showEvidence = (result) => {
 
 const saveRun = (result, sourceText = source.value) => {
   const runs = readStorage(HISTORY_KEY, []);
+  if (result.mode === "pitch decision") {
+    runs.unshift({
+      id: Date.now() + "-decision",
+      study: result.study,
+      source: sourceText,
+      chance:
+        result.selected.goalChance ??
+        Math.max(...result.selected.outcomes.map((item) => item.chance)),
+      evidence: "simulated outcomes",
+      time: Date.now(),
+    });
+    writeStorage(HISTORY_KEY, runs.slice(0, 12));
+    return;
+  }
   runs.unshift({
     id: Date.now() + "-" + result.audit.planFingerprint.slice(0, 8),
     study: result.study,
@@ -538,8 +590,16 @@ const playgroundMethod = element("#playground-method");
 const playgroundPreview = element("#playground-source");
 const playgroundResult = element("#playground-result");
 const matchupVisual = element("#matchup-visual");
+const serverRequired = element("#server-required");
+const playgroundRun = element("#playground-run");
 let lastPlaygroundResponse;
 let playgroundData;
+
+const setPlaygroundServer = (available) => {
+  serverRequired.hidden = available;
+  playgroundRun.disabled = !available;
+  serverRequired.setAttribute("aria-live", available ? "off" : "polite");
+};
 
 const titleCase = (value) =>
   value.replace(/\b\w/g, (character) => character.toUpperCase());
@@ -667,14 +727,19 @@ const loadPlaygroundProfiles = async () => {
     playgroundBatter.disabled = false;
     playgroundPitcher.value = playgroundData.pitchers[0]?.id ?? "P100";
     playgroundBatter.value = playgroundData.batters[0]?.id ?? "B100";
+    setPlaygroundServer(true);
     updatePlayground();
   } catch {
-    playgroundPitcher.innerHTML = '<option value="P100">P100</option>';
-    playgroundBatter.innerHTML = '<option value="B100">B100</option>';
-    playgroundPitcher.disabled = false;
-    playgroundBatter.disabled = false;
+    playgroundData = undefined;
+    playgroundPitcher.innerHTML =
+      '<option value="">Service not available</option>';
+    playgroundBatter.innerHTML =
+      '<option value="">Service not available</option>';
+    playgroundPitcher.disabled = true;
+    playgroundBatter.disabled = true;
+    setPlaygroundServer(false);
     matchupVisual.innerHTML =
-      "<span>Player profiles are not available. The study can still run.</span>";
+      "<span>Run <code>npm run app</code>, then reload this page.</span>";
     updatePlayground();
   }
 };
@@ -841,8 +906,9 @@ element("#playground-form").addEventListener("submit", async (event) => {
         "</p></div>";
     }
   } catch {
+    setPlaygroundServer(false);
     playgroundResult.innerHTML =
-      '<div class="playground-error"><strong>The study did not run.</strong><p>The playground could not reach the compiler.</p></div>';
+      '<div class="playground-error"><strong>Start the local service.</strong><p>Run <code>npm run app</code> in the project folder. Then reload this page.</p></div>';
   } finally {
     buttons.forEach((button) => {
       button.disabled = false;

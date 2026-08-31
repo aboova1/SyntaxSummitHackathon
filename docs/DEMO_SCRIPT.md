@@ -1,95 +1,57 @@
-# Five-minute demonstration script
+# Demonstration script
 
-Create a silent interaction draft with `npm run demo:record`.
+## Offline start
 
-The command writes `output/playwright/seamscript-demo.webm`.
+Open `web/offline.html`.
 
-Use the script below for the final narration.
+Explain that this page needs no server or network.
 
-## 0:00 to 0:30 — Problem
+Select Alex Morgan and Taylor Kim.
 
-Baseball teams have detailed data and approved models.
+Keep the 1-2 count and the prior fastball.
 
-Many coaches still need an analyst to use them.
+Select `Predict outcomes`.
 
-SeamScript turns one baseball question into a checked execution plan.
+Test a slider low and away.
 
-## 0:30 to 1:20 — Language
+Run the simulation.
 
-Show `examples/demo.seam` in the browser studio.
+Show the six outcome chances.
 
-Point to `target`.
+Explain that they total 100%.
 
-Say: “This is the event we estimate.”
+Point to the 40,000 trial count.
 
-Point to `facts`.
+Change the task to `Recommend a pitch`.
 
-Say: “These are inputs known before the pitch.”
+Select `Swing and miss`.
 
-Point to `sequence.after` and `sequence.versus`.
+Run the simulation.
 
-Explain that both groups share one target, lookback, and evidence type.
+Show the best pitch and target location.
 
-## 1:20 to 2:00 — Compiler
+Show the two other ranked calls.
 
-Select **Check**.
+Explain that the model tested only this pitcher's arsenal.
 
-Change `event` to `result`.
+## Language
 
-Show the exact source error and correction.
+Point to `situation`.
 
-Restore `event`.
+Explain that it contains known pre-pitch facts.
 
-Select **Compile**.
+Point to `question`.
 
-Show the frozen execution steps and generated SQL.
+Explain that it contains the requested output.
 
-## 2:00 to 3:05 — Run
+Point to `using`.
 
-Select **Run study**.
+Explain that team defaults can select remote data and models.
 
-State that the data is synthetic.
+## Limits
 
-Show observed, model, and simulated chances.
+State that the data and local model are synthetic.
 
-Show the primary and baseline difference.
+State that the range covers simulation error only.
 
-Show the zone map and audit data.
-
-Explain that model uncertainty is unavailable.
-
-Explain that Monte Carlo error excludes model and data uncertainty.
-
-## 3:05 to 3:45 — Automatic simulation
-
-Show `evidence: simulation`.
-
-Explain that the user does not set a seed or trial count.
-
-The runtime increases trials until its error rule passes.
-
-The normal result shows the trial count.
-
-The protected audit record stores the seed.
-
-## 3:45 to 4:25 — Remote resources
-
-Show `examples/seam.catalog.yml`.
-
-Explain the HTTP data, MLflow, KServe, and OpenAPI connectors.
-
-The compiler freezes each alias to an exact model version.
-
-The system never trains an untested replacement.
-
-## 4:25 to 5:00 — Impact
-
-Name the first user: a pregame game-plan coordinator.
-
-Name the next users: catching coordinators and pitching coaches.
-
-State the boundary: SeamScript supports decisions. It does not replace coaches.
-
-Close with this line:
-
-“SeamScript makes trusted baseball analysis readable, repeatable, and reviewable.”
+State that a production catcher review needs private call and target data.

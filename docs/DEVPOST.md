@@ -6,87 +6,86 @@ SeamScript
 
 ## Short description
 
-A readable language and compiler for checked baseball sequence analysis.
+A readable language for checked next-pitch prediction and recommendation.
 
 ## Inspiration
 
-Baseball teams have detailed pitch data and approved prediction systems.
+Baseball teams have detailed pitch data and approved models.
 
-Coaches often need an analyst, SQL, and custom code to use them.
+Coaches still need analysts and custom code to use them.
 
-We wanted one clear language for that last mile.
+We wanted one clear language for the final decision.
 
 ## What it does
 
-SeamScript lets a user describe one pitch-sequence question.
+SeamScript starts with a real pre-pitch situation.
 
-The language separates the target event from the input facts.
+The user enters the pitcher, batter, count, prior pitch, and game state.
 
-Its compiler checks syntax, baseball meaning, resource contracts, and feature timing.
+The user then selects one task.
 
-It then creates a frozen plan, generated SQL, and bounded service calls.
+- Predict all outcomes for one pitch and target location.
+- Recommend the best available pitch call for one result.
 
-The runtime can calculate observed rates, model chances, and simulated chances.
+The result has six separate outcomes that total 100%.
 
-Automatic simulation stops when Monte Carlo error reaches its approved limit.
+Recommendation mode tests the pitcher's arsenal and approved target locations.
 
-The normal result hides technical controls, including the seed.
+Automatic simulation runs 40,000 trials for each call.
 
-The protected audit record keeps them for repeatability.
+The user does not enter technical random controls.
+
+## Language design
+
+`situation` contains only known facts.
+
+`question` contains only the requested output.
+
+`outcomes for` tests one call.
+
+`best pitch for` requests a ranked recommendation.
+
+This formula stays readable and easy to remember.
 
 ## How we built it
 
-We built a custom lexer, parser, concrete tree, and typed semantic checker in TypeScript.
+We built the language, checked planner, runtime, and browser studio in TypeScript.
 
-We added a catalog resolver, execution planner, SQL generator, runtime, CLI, and browser studio.
+The runtime can connect to local or remote data and approved models.
 
-The data contract includes more than 70 baseball fields.
+It can freeze MLflow model versions and call KServe services.
 
-The compiler allows only facts known before the target pitch.
+It does not train an undeclared replacement model.
 
-Remote connectors support HTTP data, MLflow, KServe V2, and OpenAPI services.
+## Research choices
 
-## Challenges
+Pitch type alone is not a complete call.
 
-Natural English is readable but difficult to remember precisely.
+The product includes intended location and execution error.
 
-We used a small, fixed, YAML-like formula instead.
+Long sequence simulation compounds model and policy error.
 
-Pitch-sequence models also confuse prediction with causation.
+The first release therefore predicts one pitch at a time.
 
-We separated observed, model, simulation, and uncertainty labels.
+Recommendations state one goal and stay inside the pitcher's arsenal.
 
 ## Accomplishments
 
-- A complete compiler and local runtime
-- Exact remote resource plans
-- Automatic and repeatable simulation
-- Clear target and fact separation
-- A responsive working demonstration
-- Unit, integration, CLI, remote, and browser tests
-
-## What we learned
-
-Sequence history matters, but context and pitch shape matter more.
-
-Strong classification scores do not prove calibrated probabilities.
-
-Long simulations compound model and policy error.
-
-The best first use is a reviewed pregame workflow.
-
-## Next steps
-
-Connect real team data and a validated team model.
-
-Add private call-source and intended-location fields.
-
-Test plate-appearance simulation with an approved pitch-choice policy.
-
-Measure in-game latency before any mound-visit release.
+- Two direct baseball decision tasks
+- A clear facts-versus-output language
+- Complete outcome distributions
+- Automatic local simulation
+- Ranked pitch and location calls
+- Approved remote resource support
+- A full live studio
+- A self-contained offline playground
+- Desktop and mobile layouts
+- Unit, server, and browser tests
 
 ## Demonstration notice
 
-The included data and model are synthetic.
+The included players, data, and local model are synthetic.
 
-They prove the complete software path. They do not prove a baseball claim.
+They prove the product flow.
+
+They do not provide real baseball advice.

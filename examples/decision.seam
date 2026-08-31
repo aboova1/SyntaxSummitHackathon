@@ -1,0 +1,26 @@
+study: Next pitch for Alex Morgan against Taylor Kim
+
+source: synthetic demo pitches
+
+situation:
+  pitcher: Alex Morgan
+  batter: Taylor Kim
+  count: 1-2
+  previous pitch: four-seam fastball
+  previous location: high and inside
+  previous result: foul
+  outs: 1
+  runners: first
+  score: tied
+
+question:
+  outcomes for: slider
+  target location: low and away
+
+using:
+  model: approved pitch outcome
+  simulation: automatic
+
+include:
+  - outcome chances
+  - uncertainty

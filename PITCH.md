@@ -1,62 +1,42 @@
 # SeamScript pitch
 
-SeamScript turns a baseball question into a checked execution plan.
+SeamScript turns a live baseball situation into a checked next-pitch decision.
 
-Baseball teams have detailed data and tested models.
+A coach states the pitcher, batter, count, previous pitch, and game state.
 
-Most coaches still need an analyst to use them.
+The coach then asks one of two questions.
 
-SeamScript removes that access gap.
+- What can happen if we call this pitch here?
+- Which pitch call best supports this result?
 
-A pregame coordinator writes the question in normal study order.
+SeamScript returns one complete outcome distribution for a tested call.
 
-`source` selects approved data.
+It can also rank calls from the pitcher's real arsenal.
 
-`target` states what to estimate.
+Each call includes pitch type and intended location.
 
-`facts` states what the model can use.
+The language keeps known facts in `situation`.
 
-`sequence.after` selects the primary setup.
+It keeps the requested result in `question`.
 
-`sequence.versus` selects the baseline.
+This split makes each study easy to read and check.
 
-This structure prevents a target from looking like an input fact.
+Approved data and models can stay in a team warehouse or remote service.
 
-It also removes repeated `compare`, `estimate`, and `show` commands.
+The runtime does not train an untested replacement model.
 
-The compiler checks every key, value, resource, contract, and feature time.
+Automatic simulation runs without technical controls in the study.
 
-It then builds a frozen plan, parameterized SQL, and bounded service calls.
+Each result shows six separate outcomes that total 100%.
 
-The plan can use a team warehouse and approved remote models.
+It also shows the model version, trial count, and uncertainty limit.
 
-The system never trains an untested model by default.
+The first target user is a pregame game-plan coordinator.
 
-`evidence: simulation` runs automatic trials for the target event.
+The second target user is a catching coordinator who reviews pitch calls.
 
-The runtime stops when Monte Carlo error reaches its approved limit.
+The third target user is a pitching coach during an inning break.
 
-The user does not set a seed or trial count.
+The offline playground uses synthetic players and an illustrative local model.
 
-The private audit record keeps the seed for repeatability.
-
-Every result separates four ideas:
-
-- observed rate;
-- model chance;
-- simulated chance;
-- uncertainty limits.
-
-SeamScript does not call a matched difference a causal effect.
-
-The first product serves a pregame game-plan coordinator.
-
-Later releases can review catcher calls and support mound-visit decisions.
-
-Those releases need private call data and stronger speed tests.
-
-The demonstration uses synthetic pitches and a transparent test model.
-
-Its result proves the complete product path. It does not prove a baseball claim.
-
-SeamScript makes trusted baseball analysis readable, repeatable, and reviewable.
+It proves the product flow. It does not provide real baseball advice.

@@ -2,122 +2,88 @@
 
 ## 1. Pregame game-plan coordinator
 
-This user prepares pitcher plans for an opponent or series.
+This user prepares pitch plans for an opponent.
 
-The user asks which sequences work in specific counts and batter groups.
+The user tests calls for important counts and batters.
 
-SeamScript returns matched rates, simulated chances, uncertainty, and video-ready examples.
+SeamScript shows all outcome chances for each call.
 
-This user is the best first target.
+It also ranks calls for one selected goal.
 
-The work allows human review before a coach or player receives the result.
+This user is the first product target.
 
-Team data can add intended locations, scouting tags, and pitcher availability.
-
-Public Statcast can support the hackathon demonstration.
+The user has time to review the result before a game.
 
 ### Main decision
 
-Which two or three sequence plans should enter the next game plan?
+Which pitch calls should enter the game plan for this batter and count?
 
 ### Success measure
 
-The user creates a trusted answer in minutes, without a new analyst request.
+The user gets a checked answer without a new analyst request.
 
-### Language pattern
+## 2. Catching coordinator
 
-The coordinator starts with the decision scope.
+This user reviews the quality of pitch calls.
 
-```seam
-source: team pitches
+The system must separate the call from pitch execution.
 
-scope:
-  pitchers: P100
-  counts: 1-2, 2-2
-  batter sides: left
+Each call must contain the intended pitch type and location.
 
-target:
-  event: swing and miss
-  pitch: slider
+Public Statcast does not reliably contain this intent.
 
-sequence:
-  after: fastball
-  versus: without fastball
-  lookback: 2 pitches
-
-evidence: simulation
-```
-
-Team defaults supply the model, matching method, simulator, and safety limits.
-
-## 2. Catching coordinator or catcher scout
-
-This user reviews the quality of pitch-selection decisions.
-
-The system must separate the pitch call from pitch execution and pitch framing.
-
-Public Statcast shows the delivered pitch. It does not identify who called it.
-
-Pitchers can also call pitches with PitchCom.
-
-Therefore, a catcher-quality claim needs the team's call-source and intended-location data.
-
-Without those fields, SeamScript only reviews the observed sequence.
+A production review needs private call, target, and call-source data.
 
 ### Main decision
 
-Where does a catcher choose strong or weak sequences for each pitcher and count?
+Did the catcher select a strong call for the known situation?
 
 ### Success measure
 
-The review finds repeatable decisions after it controls for pitcher, batter, count, and execution.
+The review controls for pitcher, batter, count, game state, and execution.
 
-## 3. In-game pitching coach or manager
+## 3. Pitching coach
 
-This user needs a short answer during a mound visit or inning break.
+This user needs a short answer during an inning break.
 
-MLB mound visits last 30 seconds.
+The product must use loaded data and an approved model version.
 
-The product must use preloaded data and an approved model version.
+It must return three ranked calls in less than one second.
 
-It must return three ranked options in less than one second.
+Each call must show its chance and uncertainty.
 
-Each option must show chance, uncertainty, and one short reason.
-
-The result must say `recommended option`, not `optimal pitch`.
-
-This user should follow the pregame release.
-
-The decision has high time pressure and strong hidden context.
+This release must follow the pregame release.
 
 ### Main decision
 
-Which pitch sequence best fits this batter, count, pitcher condition, and game state?
+Which available pitch and target location best support the current goal?
 
 ### Success measure
 
-The coach gets a useful answer before the visit ends.
+The coach receives a clear answer before play starts again.
 
 ## Product order
 
-1. Build the pregame workflow.
+1. Build the reviewed pregame workflow.
 2. Add catcher review when private call data exists.
-3. Add the in-game view after speed and reliability tests pass.
+3. Add the in-game workflow after speed and reliability tests.
 
-The first release should support decisions. It should not replace the coach.
+The product supports a coach. It does not replace the coach.
 
-## Current evidence
+## Example
 
-- MLB describes data and game-plan staff as links between research and coaches.
-- MLB reports that catchers and coaches prepare pitcher-specific plans before games.
-- MLB permits pitchers and catchers to call pitches with PitchCom.
-- MLB limits a mound visit to 30 seconds.
-- A 2026 MLB report describes coaches testing pitch calls from the dugout.
+```seam
+situation:
+  pitcher: Alex Morgan
+  batter: Taylor Kim
+  count: 1-2
+  previous pitch: four-seam fastball
+  previous location: high and inside
+  previous result: foul
+  outs: 1
+  runners: first
+  score: tied
 
-## Sources
-
-- [Rockies data and game-plan coordinator](https://www.mlb.com/news/rockies-add-data-and-game-plan-coordinator)
-- [Catcher game preparation](https://www.mlb.com/news/featured/catching-up-with-tim-cossins)
-- [Pitchers and PitchCom](https://www.mlb.com/news/mlb-pitchers-pitchcom-transmitters-2023-update)
-- [MLB mound-visit rule](https://www.mlb.com/glossary/rules/mound-visit)
-- [2026 coach pitch-calling test](https://www.mlb.com/news/rockies-call-pitches-from-dugout-2026-spring-training)
+question:
+  best pitch for: swing and miss
+```

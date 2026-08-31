@@ -8,13 +8,13 @@
       content="Write and run clear baseball studies with SeamScript."
     />
     <title>SeamScript Studio</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="app-rail" id="app-rail" aria-label="Main navigation">
         <div class="workspace-brand">
-          <span class="workspace-mark" aria-hidden="true">S</span>
+          <img class="workspace-mark" src="./baseball.svg" alt="" />
           <span><strong>SeamScript</strong><small>Decision studio</small></span>
         </div>
         <nav class="rail-nav">
@@ -27,6 +27,12 @@
             </svg>
             <span>Playground</span>
           </button>
+          <a class="nav-item" href="./offline.html">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" />
+            </svg>
+            <span>Offline demo</span>
+          </a>
           <button
             class="nav-item nav-active"
             data-view="studio"
@@ -86,7 +92,7 @@
             <span>Theme</span>
           </button>
           <div class="rail-version">
-            <span>v0.3</span><span>Local studio</span>
+            <span>v0.4</span><span>Local studio</span>
           </div>
         </div>
       </aside>
@@ -103,21 +109,19 @@
               <path d="M4 7h16M4 12h16M4 17h16" />
             </svg>
           </button>
-          <span
-            ><span class="workspace-mark">S</span
-            ><strong>SeamScript</strong></span
-          >
+          <span>
+            <img class="workspace-mark" src="./baseball.svg" alt="" />
+            <strong>SeamScript</strong>
+          </span>
           <span class="status-dot warning" aria-label="Synthetic data"></span>
         </header>
         <main class="content-scroll" id="main-content">
           <section class="page studio-page view-active" data-page="studio">
             <header class="page-header">
               <div>
-                <p class="eyebrow">Decision workspace</p>
-                <h1>Pitch sequence study</h1>
+                <h1>Next pitch decision</h1>
                 <p class="page-description">
-                  Write one clear question. SeamScript checks each input before
-                  it runs.
+                  State the known situation. Then test a call or request one.
                 </p>
               </div>
               <div class="page-actions">
@@ -133,7 +137,7 @@
                 <div class="file-identity">
                   <span class="file-icon" aria-hidden="true">S</span>
                   <div>
-                    <strong id="study-file">fastball-before-slider.seam</strong
+                    <strong id="study-file">next-pitch-decision.seam</strong
                     ><small id="save-state">Example study</small>
                   </div>
                 </div>
@@ -240,258 +244,412 @@
             </section>
             <section class="workflow-line" aria-label="Study process">
               <div>
-                <span>01</span><strong>Data</strong
-                ><small>Select a trusted source.</small>
+                <span>01</span><strong>Players</strong
+                ><small>Select the pitcher and batter.</small>
               </div>
               <div>
-                <span>02</span><strong>Target</strong
-                ><small>Name the event to estimate.</small>
+                <span>02</span><strong>Situation</strong
+                ><small>Enter known pre-pitch facts.</small>
               </div>
               <div>
-                <span>03</span><strong>Sequence</strong
-                ><small>State the setup and baseline.</small>
+                <span>03</span><strong>Question</strong
+                ><small>Predict or recommend.</small>
               </div>
               <div>
-                <span>04</span><strong>Facts</strong
-                ><small>Use known game facts.</small>
+                <span>04</span><strong>Simulation</strong
+                ><small>Run automatic trials.</small>
               </div>
               <div>
-                <span>05</span><strong>Evidence</strong
-                ><small>Select and review the result.</small>
+                <span>05</span><strong>Decision</strong
+                ><small>Review chances and limits.</small>
               </div>
             </section>
           </section>
           <section class="page narrow-page" data-page="playground" hidden>
             <header class="page-header">
               <div>
-                <p class="eyebrow">Guided playground</p>
-                <h1>Build a study without code</h1>
+                <h1>Make the next pitch decision</h1>
                 <p class="page-description">
-                  Select a question. The playground writes valid SeamScript and
-                  runs the full analysis.
+                  Test one pitch call or find the best call for one result.
                 </p>
-              </div>
-              <div class="playground-graphic" aria-hidden="true">
-                <svg viewBox="0 0 220 105">
-                  <path class="field-line" d="M110 14 202 91H18Z" />
-                  <path class="field-line" d="M110 14v77M64 53h92" />
-                  <rect
-                    class="zone-line"
-                    x="91"
-                    y="44"
-                    width="38"
-                    height="46"
-                  />
-                  <path class="pitch-path" d="M36 77C71 12 142 20 181 59" />
-                  <circle class="pitch-ball" cx="181" cy="59" r="6" />
-                  <circle class="pitch-start" cx="36" cy="77" r="3" />
-                </svg>
               </div>
             </header>
 
-            <div class="playground-layout">
-              <form class="playground-form" id="playground-form">
+            <div class="playground-layout decision-layout">
+              <form class="playground-form" id="decision-form">
+                <aside class="server-required" id="server-required" hidden>
+                  <div>
+                    <span class="status-dot warning" aria-hidden="true"></span>
+                    <div>
+                      <strong>Start the local service</strong>
+                      <p>This playground needs the compiler and runtime.</p>
+                    </div>
+                  </div>
+                  <code>npm run app</code>
+                  <a class="text-button" href="./offline.html"
+                    >Use the offline demo</a
+                  >
+                </aside>
                 <div class="section-heading">
                   <div>
                     <h2>Question</h2>
-                    <p>Each choice changes one clear part of the study.</p>
+                    <p>Test one call or find the best call for one goal.</p>
                   </div>
                 </div>
-
+                <fieldset class="task-switch" aria-label="Question type">
+                  <legend>Question type</legend>
+                  <label
+                    ><input
+                      type="radio"
+                      name="decision-task"
+                      value="predict"
+                      checked
+                    /><span
+                      ><strong>Predict outcomes</strong
+                      ><small>Test one next pitch.</small></span
+                    ></label
+                  >
+                  <label
+                    ><input
+                      type="radio"
+                      name="decision-task"
+                      value="recommend"
+                    /><span
+                      ><strong>Recommend a pitch</strong
+                      ><small>Find the best call for one goal.</small></span
+                    ></label
+                  >
+                </fieldset>
                 <div class="form-section">
-                  <span class="form-step">01</span>
+                  <div class="form-step">
+                    <span>01</span><strong>Matchup</strong>
+                  </div>
                   <div>
                     <div class="form-fields">
-                      <label>
-                        <span>Pitcher</span>
-                        <select
-                          id="playground-pitcher"
+                      <label
+                        ><span>Pitcher</span
+                        ><select
+                          id="decision-pitcher"
                           aria-label="Pitcher"
                           disabled
                         >
-                          <option value="">Loading pitchers…</option>
-                        </select>
-                        <small>The study uses this pitcher's records.</small>
-                      </label>
-                      <label>
-                        <span>Batter</span>
-                        <select
-                          id="playground-batter"
+                          <option>Loading pitchers…</option></select
+                        ><small
+                          >The model uses this pitcher's arsenal and pitch
+                          quality.</small
+                        ></label
+                      >
+                      <label
+                        ><span>Batter</span
+                        ><select
+                          id="decision-batter"
                           aria-label="Batter"
                           disabled
                         >
-                          <option value="">Loading batters…</option>
-                        </select>
-                        <small>The study uses this batter's matchups.</small>
-                      </label>
+                          <option>Loading batters…</option></select
+                        ><small
+                          >The model uses this batter's contact and chase
+                          profile.</small
+                        ></label
+                      >
                     </div>
-                    <div class="matchup-visual" id="matchup-visual">
+                    <div class="matchup-visual" id="decision-matchup">
                       <span>Loading synthetic player profiles…</span>
                     </div>
-                    <div class="form-fields matchup-filters">
-                      <label>
-                        <span>Count group</span>
-                        <select id="playground-counts" aria-label="Count group">
-                          <option value="">All counts</option>
-                          <option value="0-0, 1-1, 2-2">Even counts</option>
-                          <option value="0-1, 1-2">Pitcher ahead</option>
-                          <option value="0-0, 0-1, 1-0, 1-1">
-                            Early counts
-                          </option>
-                        </select>
-                        <small
-                          >The study includes these pre-pitch counts.</small
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="form-step">
+                    <span>02</span><strong>Decision</strong>
+                  </div>
+                  <div>
+                    <div class="form-fields" id="decision-predict-fields">
+                      <label
+                        ><span>Next pitch</span
+                        ><select
+                          id="decision-next-pitch"
+                          aria-label="Next pitch"
+                        ></select
+                        ><small>This is the pitch call to test.</small></label
+                      >
+                      <label
+                        ><span>Target location</span
+                        ><select
+                          id="decision-target-location"
+                          aria-label="Target location"
                         >
-                      </label>
-                      <label>
-                        <span>Batter side</span>
-                        <select id="playground-side" aria-label="Batter side">
-                          <option value="">Both sides</option>
-                          <option value="left">Left</option>
-                          <option value="right">Right</option>
-                        </select>
-                        <small
-                          >The study includes this side of the plate.</small
-                        >
-                      </label>
+                          <option>high and inside</option>
+                          <option>high and away</option>
+                          <option>middle</option>
+                          <option>low and inside</option>
+                          <option selected>low and away</option></select
+                        ><small
+                          >The model includes normal execution error around this
+                          target.</small
+                        ></label
+                      >
                     </div>
-                  </div>
-                </div>
-
-                <div class="form-section">
-                  <span class="form-step">02</span>
-                  <div class="form-fields">
-                    <label>
-                      <span>Target pitch</span>
-                      <input
-                        value="Slider"
-                        readonly
-                        aria-label="Target pitch"
-                      />
-                      <small
-                        >The demonstration data supports slider
-                        sequences.</small
-                      >
-                    </label>
-                    <label>
-                      <span>Target event</span>
-                      <select id="playground-outcome" aria-label="Target event">
-                        <option value="swing and miss">Swing and miss</option>
-                        <option value="contact">Contact</option>
-                        <option value="ball in play">Ball in play</option>
-                      </select>
-                      <small>This is the event that the study estimates.</small>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="form-section">
-                  <span class="form-step">03</span>
-                  <div class="form-fields">
-                    <label>
-                      <span>Previous pitch</span>
-                      <select
-                        id="playground-previous"
-                        aria-label="Previous pitch"
-                      >
-                        <option value="four-seam fastball">
-                          Four-seam fastball
-                        </option>
-                        <option value="sinker">Sinker</option>
-                        <option value="curveball">Curveball</option>
-                        <option value="changeup">Changeup</option>
-                      </select>
-                      <small>The baseline excludes this pitch type.</small>
-                    </label>
-                    <label>
-                      <span>Lookback</span>
-                      <select id="playground-window" aria-label="Lookback">
-                        <option value="1">1 pitch</option>
-                        <option value="2" selected>2 pitches</option>
-                        <option value="3">3 pitches</option>
-                      </select>
-                      <small>The study checks this many prior pitches.</small>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="form-section">
-                  <span class="form-step">04</span>
-                  <div class="form-fields one-column">
-                    <label>
-                      <span>Evidence</span>
-                      <select id="playground-method" aria-label="Evidence">
-                        <option value="simulation">Automatic simulation</option>
-                        <option value="model">Approved model</option>
-                        <option value="observed">Observed records</option>
-                      </select>
-                      <small
-                        >Automatic simulation estimates the event chance and
-                        stops at the approved error limit.</small
-                      >
-                    </label>
-                  </div>
-                </div>
-
-                <div class="playground-actions">
-                  <button class="button" type="button" id="playground-reset">
-                    Reset
-                  </button>
-                  <button class="button button-primary" type="submit">
-                    <svg aria-hidden="true" viewBox="0 0 24 24">
-                      <path d="m9 7 8 5-8 5V7Z" />
-                    </svg>
-                    Run playground
-                  </button>
-                </div>
-              </form>
-
-              <div class="playground-output">
-                <section class="preview-section">
-                  <div class="section-heading">
-                    <div>
-                      <h2>Generated study</h2>
-                      <p>Every change updates this source.</p>
-                    </div>
-                    <button
-                      class="text-button"
-                      id="playground-open"
-                      type="button"
+                    <div
+                      class="form-fields one-column"
+                      id="decision-recommend-fields"
+                      hidden
                     >
-                      Open in Studio
-                    </button>
+                      <label
+                        ><span>Desired result</span
+                        ><select id="decision-goal" aria-label="Desired result">
+                          <option>swing and miss</option>
+                          <option>called strike</option>
+                          <option>any strike</option>
+                          <option>out in play</option></select
+                        ><small
+                          >The model ranks calls from the selected pitcher's
+                          arsenal.</small
+                        ></label
+                      >
+                    </div>
                   </div>
-                  <pre
-                    id="playground-source"
-                    aria-label="Generated SeamScript"
-                  ></pre>
-                </section>
-                <section
-                  class="playground-result"
-                  id="playground-result"
-                  aria-live="polite"
-                >
-                  <div class="playground-empty">
-                    <span class="empty-mark" aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M5 19 19 5M7 5h12v12M5 12v7h7" />
-                      </svg>
-                    </span>
+                </div>
+                <div class="form-section">
+                  <div class="form-step">
+                    <span>03</span><strong>Game state</strong>
+                  </div>
+                  <div>
+                    <div class="form-fields">
+                      <label
+                        ><span>Count</span
+                        ><select id="decision-count" aria-label="Count">
+                          <option>0-0</option>
+                          <option>0-1</option>
+                          <option>0-2</option>
+                          <option>1-0</option>
+                          <option>1-1</option>
+                          <option selected>1-2</option>
+                          <option>2-0</option>
+                          <option>2-1</option>
+                          <option>2-2</option>
+                          <option>3-0</option>
+                          <option>3-1</option>
+                          <option>3-2</option></select
+                        ><small
+                          >This is the count before the next pitch.</small
+                        ></label
+                      >
+                      <label
+                        ><span>Previous pitch</span
+                        ><select
+                          id="decision-previous"
+                          aria-label="Previous pitch"
+                        >
+                          <option value="none">None</option>
+                          <option value="four-seam fastball" selected>
+                            Four-Seam Fastball
+                          </option>
+                          <option>sinker</option>
+                          <option>slider</option>
+                          <option>sweeper</option>
+                          <option>curveball</option>
+                          <option>changeup</option></select
+                        ><small
+                          >This is the last pitch in this plate
+                          appearance.</small
+                        ></label
+                      >
+                    </div>
+                    <div class="form-fields matchup-filters">
+                      <label
+                        ><span>Previous location</span
+                        ><select
+                          id="decision-previous-location"
+                          aria-label="Previous location"
+                        >
+                          <option selected>high and inside</option>
+                          <option>high and away</option>
+                          <option>middle</option>
+                          <option>low and inside</option>
+                          <option>low and away</option></select
+                        ><small>This describes the last pitch.</small></label
+                      >
+                      <label
+                        ><span>Previous result</span
+                        ><select
+                          id="decision-previous-result"
+                          aria-label="Previous result"
+                        >
+                          <option>ball</option>
+                          <option>called strike</option>
+                          <option>swing and miss</option>
+                          <option selected>foul</option>
+                          <option>in play</option></select
+                        ><small>This describes the last pitch.</small></label
+                      >
+                    </div>
+                    <div class="form-fields context-grid">
+                      <label
+                        ><span>Outs</span
+                        ><select id="decision-outs" aria-label="Outs">
+                          <option>0</option>
+                          <option selected>1</option>
+                          <option>2</option>
+                        </select></label
+                      >
+                      <label
+                        ><span>Runners</span
+                        ><select id="decision-runners" aria-label="Runners">
+                          <option value="empty">Bases empty</option>
+                          <option value="first" selected>First</option>
+                          <option value="second">Second</option>
+                          <option value="third">Third</option>
+                          <option value="first and second">
+                            First and second
+                          </option>
+                          <option value="loaded">Bases loaded</option>
+                        </select></label
+                      >
+                      <label
+                        ><span>Score</span
+                        ><select id="decision-score" aria-label="Score">
+                          <option value="ahead">Pitching team ahead</option>
+                          <option value="tied" selected>Tied</option>
+                          <option value="behind">Pitching team behind</option>
+                        </select></label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="offline-method">
+                  <div>
+                    <span class="method-icon">40K</span>
                     <div>
-                      <strong>Ready to test this question</strong>
+                      <strong>Automatic simulation</strong>
                       <p>
-                        The playground uses the same checked runtime as Studio.
+                        The runtime calculates one complete outcome distribution
+                        for each pitch call.
                       </p>
                     </div>
                   </div>
+                  <span>Checked</span>
+                </div>
+                <div class="playground-actions">
+                  <button class="button" type="button" id="decision-reset">
+                    Reset
+                  </button>
+                  <button
+                    class="button button-primary"
+                    id="decision-run"
+                    type="submit"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="m9 7 8 5-8 5V7Z" /></svg
+                    >Run decision
+                  </button>
+                </div>
+              </form>
+              <div class="playground-output" id="decision-output">
+                <header class="output-toolbar">
+                  <div
+                    class="output-tabs"
+                    role="tablist"
+                    aria-label="Decision output"
+                  >
+                    <button
+                      class="output-tab active"
+                      type="button"
+                      role="tab"
+                      data-output-tab="result"
+                      aria-selected="true"
+                    >
+                      Decision
+                    </button>
+                    <button
+                      class="output-tab"
+                      type="button"
+                      role="tab"
+                      data-output-tab="source"
+                      aria-selected="false"
+                    >
+                      Source
+                    </button>
+                  </div>
+                  <span class="output-status" id="decision-status"
+                    ><span class="status-dot positive" aria-hidden="true"></span
+                    >Ready</span
+                  >
+                </header>
+                <section
+                  class="output-panel active"
+                  data-output-panel="result"
+                  role="tabpanel"
+                >
+                  <section
+                    class="playground-result"
+                    id="decision-result"
+                    aria-live="polite"
+                  ></section>
+                </section>
+                <section
+                  class="output-panel"
+                  data-output-panel="source"
+                  role="tabpanel"
+                  hidden
+                >
+                  <section class="preview-section">
+                    <div class="section-heading">
+                      <div>
+                        <h2>Generated study</h2>
+                        <p>Facts stay separate from the requested result.</p>
+                      </div>
+                      <button
+                        class="text-button"
+                        id="decision-open"
+                        type="button"
+                      >
+                        Open in Studio
+                      </button>
+                    </div>
+                    <pre
+                      id="decision-source"
+                      aria-label="Generated SeamScript"
+                    ></pre>
+                  </section>
                 </section>
               </div>
             </div>
+            <form id="playground-form" hidden aria-hidden="true">
+              <select id="playground-pitcher">
+                <option value="P100">P100</option>
+              </select>
+              <select id="playground-batter">
+                <option value="B100">B100</option>
+              </select>
+              <select id="playground-counts">
+                <option value=""></option>
+              </select>
+              <select id="playground-side">
+                <option value=""></option>
+              </select>
+              <select id="playground-outcome">
+                <option value="swing and miss">swing and miss</option>
+              </select>
+              <select id="playground-previous">
+                <option value="four-seam fastball">four-seam fastball</option>
+              </select>
+              <select id="playground-window">
+                <option value="2">2</option>
+              </select>
+              <select id="playground-method">
+                <option value="simulation">simulation</option>
+              </select>
+              <button id="playground-run" type="submit">Run</button>
+              <button id="playground-reset" type="button">Reset</button>
+            </form>
+            <div id="matchup-visual" hidden></div>
+            <pre id="playground-source" hidden></pre>
+            <div id="playground-result" hidden></div>
+            <button id="playground-open" type="button" hidden>Open</button>
           </section>
           <section class="page narrow-page" data-page="guide" hidden>
             <header class="page-header">
               <div>
-                <p class="eyebrow">Language guide</p>
                 <h1>One form. One meaning.</h1>
                 <p class="page-description">
                   Each block has one job. Indentation shows which details belong
@@ -513,55 +671,47 @@
                     <strong>Name the question</strong>
                     <p>Use a short title that describes the decision.</p>
                   </div>
-                  <code>study: Fastball before slider</code>
+                  <code>study: Next pitch against Taylor Kim</code>
                 </li>
                 <li>
-                  <span>source · scope</span>
+                  <span>source</span>
                   <div>
                     <strong>Select the records</strong>
-                    <p>Name the source. Add only the filters you need.</p>
+                    <p>Name one approved local or remote source.</p>
                   </div>
                   <code>source: team pitches</code>
                 </li>
                 <li>
-                  <span>resources</span>
+                  <span>situation</span>
                   <div>
-                    <strong>Override a team default</strong>
-                    <p>Omit this block for the approved default tools.</p>
+                    <strong>State known facts</strong>
+                    <p>Use only facts known before the next pitch.</p>
                   </div>
-                  <code>model: approved event model</code>
+                  <code>count: 1-2 · previous pitch: fastball</code>
                 </li>
                 <li>
-                  <span>target</span>
+                  <span>question</span>
                   <div>
-                    <strong>Name what to estimate</strong>
-                    <p>The target is never a fact.</p>
+                    <strong>Select one task</strong>
+                    <p>Predict one call or request the best call.</p>
                   </div>
-                  <code>event: swing and miss</code>
+                  <code>outcomes for: slider</code>
                 </li>
                 <li>
-                  <span>sequence</span>
+                  <span>question</span>
                   <div>
-                    <strong>Define both conditions</strong>
-                    <p>One lookback applies to the setup and baseline.</p>
+                    <strong>Request a recommendation</strong>
+                    <p>The runtime tests the pitcher's available pitches.</p>
                   </div>
-                  <code>after: fastball · versus: without fastball</code>
+                  <code>best pitch for: swing and miss</code>
                 </li>
                 <li>
-                  <span>facts</span>
+                  <span>using</span>
                   <div>
-                    <strong>Control known differences</strong>
-                    <p>Only use facts known before the target pitch.</p>
+                    <strong>Select approved tools</strong>
+                    <p>Omit this block to use team defaults.</p>
                   </div>
-                  <code>match: pitcher, count, batter side</code>
-                </li>
-                <li>
-                  <span>evidence</span>
-                  <div>
-                    <strong>Select the result type</strong>
-                    <p>Simulation estimates an event chance automatically.</p>
-                  </div>
-                  <code>evidence: simulation</code>
+                  <code>simulation: automatic</code>
                 </li>
                 <li>
                   <span>include</span>
@@ -569,7 +719,7 @@
                     <strong>Add a useful view</strong>
                     <p>Core evidence stays automatic.</p>
                   </div>
-                  <code>- zone map · - 5 examples</code>
+                  <code>- outcome chances · - uncertainty</code>
                 </li>
               </ol>
             </section>
@@ -577,24 +727,33 @@
               <div class="section-heading">
                 <div>
                   <h2>Key distinction</h2>
-                  <p>The target states the answer. Facts state the inputs.</p>
+                  <p>
+                    The situation states facts. The question states the
+                    requested result.
+                  </p>
                 </div>
               </div>
               <div class="meaning-grid">
                 <article>
-                  <code>target</code>
-                  <h3>Predicted event</h3>
-                  <p>Example: a swing and miss on this slider.</p>
+                  <code>situation</code>
+                  <h3>Known before the pitch</h3>
+                  <p>
+                    Pitcher, batter, count, prior pitch, outs, runners, and
+                    score.
+                  </p>
                 </article>
                 <article>
-                  <code>sequence</code>
-                  <h3>Compared conditions</h3>
-                  <p>Example: a prior fastball against no prior fastball.</p>
+                  <code>outcomes for</code>
+                  <h3>Test one call</h3>
+                  <p>
+                    Return one complete outcome distribution for a pitch and
+                    location.
+                  </p>
                 </article>
                 <article>
-                  <code>facts</code>
-                  <h3>Known inputs</h3>
-                  <p>Example: count, batter side, and pitch shape.</p>
+                  <code>best pitch for</code>
+                  <h3>Rank available calls</h3>
+                  <p>Return the best pitch and target location for one goal.</p>
                 </article>
               </div>
             </section>
@@ -602,7 +761,6 @@
           <section class="page narrow-page" data-page="resources" hidden>
             <header class="page-header">
               <div>
-                <p class="eyebrow">Trusted resources</p>
                 <h1>Data and methods</h1>
                 <p class="page-description">
                   The catalog connects studies to approved local or remote
@@ -622,7 +780,6 @@
           <section class="page narrow-page" data-page="history" hidden>
             <header class="page-header">
               <div>
-                <p class="eyebrow">Local history</p>
                 <h1>Saved work</h1>
                 <p class="page-description">
                   This browser stores drafts and completed runs. It does not
@@ -645,6 +802,7 @@
         ></div>
       </section>
     </div>
-    <script type="module" src="/app.js"></script>
+    <script defer src="./app.js"></script>
+    <script defer src="./decision.js"></script>
   </body>
 </html>

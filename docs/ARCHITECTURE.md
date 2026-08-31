@@ -41,7 +41,9 @@ The study file never contains addresses or credentials.
 
 The planner creates a bounded directed graph.
 
-The graph contains data reads, feature work, comparisons, predictions, simulations, and output work.
+The next-pitch graph contains situation checks, pitch calls, outcome predictions, simulations, and call ranking.
+
+The legacy analysis graph still supports retrospective comparisons.
 
 The runtime owns all remote calls.
 
@@ -51,7 +53,7 @@ Remote algorithms cannot select undeclared models or data.
 
 Every baseball field has an availability time and a feature group.
 
-Only values known before the target pitch can enter a predictive request.
+Only values known before the next pitch can enter a predictive request.
 
 Post-pitch values can define results. They cannot define predictive features.
 
@@ -69,12 +71,15 @@ The compiler records every selected field in the execution plan.
 
 ## Runtime outputs
 
-Each result separates these forms of evidence:
+The next-pitch result contains six separate outcome chances.
+
+The six chances total 100%.
+
+Each result also separates these forms of evidence:
 
 - Observed rate
 - Model chance
 - Simulated chance
-- Matched difference
 - Sample uncertainty
 - Model uncertainty
 - Monte Carlo error

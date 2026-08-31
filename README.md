@@ -1,212 +1,147 @@
 # SeamScript
 
-SeamScript turns a baseball question into a checked execution plan.
+SeamScript turns a baseball situation into a checked next-pitch decision.
 
-It gives coaches access to approved data, models, and algorithms.
+It supports two direct questions.
+
+- Predict all outcomes for one pitch call.
+- Recommend the best pitch call for one desired result.
+
+A pitch call has a pitch type and an intended location.
 
 The user does not need Python, SQL, or model training.
 
-The first release studies pitch sequences.
+## Open the offline playground
 
-## The language
+Open [web/offline.html](web/offline.html) in a browser.
 
-A study follows the same order as a pregame question.
+You do not need to install software or start a server.
 
-`source` selects approved data.
+The offline page has four pitchers and six batters.
 
-`target` states what to estimate.
+It runs 40,000 local simulation trials for each pitch call.
 
-`sequence` states the setup and baseline.
+You can also open [index.html](index.html). It opens the offline page.
 
-`facts` states known inputs.
-
-`evidence` selects the result type.
+## Language example
 
 ```seam
-study: Fastball before slider
+study: Next pitch for Alex Morgan against Taylor Kim
 
-source: synthetic demo pitches
+source: team pitches
 
-scope:
-  seasons: 2023 through 2025
-  games: regular season
+situation:
+  pitcher: Alex Morgan
+  batter: Taylor Kim
+  count: 1-2
+  previous pitch: four-seam fastball
+  previous location: high and inside
+  previous result: foul
+  outs: 1
+  runners: first
+  score: tied
 
-target:
-  event: swing and miss
-  pitch: slider
+question:
+  outcomes for: slider
+  target location: low and away
 
-sequence:
-  after: fastball
-  versus: without fastball
-  lookback: 2 pitches
-
-facts:
-  match: pitcher, count, batter side, season
-  consider: batter history, pitcher form, pitch shape, sequence history, game situation, ballpark, defense
-
-evidence: simulation
+using:
+  model: approved pitch outcome
+  simulation: automatic
 
 include:
-  - zone map
-  - 5 examples
+  - outcome chances
+  - uncertainty
 ```
 
-The syntax uses one formula:
+Use this question to request a recommendation.
+
+```seam
+question:
+  best pitch for: swing and miss
+```
+
+The syntax has one formula.
 
 ```text
-source -> target -> sequence -> facts -> evidence -> include
+source -> situation -> question -> using -> include
 ```
 
-`target` is the event to estimate.
+`situation` contains known pre-pitch facts.
 
-`facts` contains information available before that event.
+`question` contains the requested output.
 
-One `lookback` applies to the primary setup and baseline.
-
-`include` adds views. Core evidence and audit data are automatic.
-
-The catalog supplies approved tools by default.
-
-An optional `resources` block selects a different approved remote tool.
-
-## Run the project
+## Run the full studio
 
 Use Node.js 22 or later.
 
 ```bash
 npm install
-npm run check
-npm run demo
 npm run app
 ```
 
-Open `http://127.0.0.1:4173` after the last command.
+Open `http://127.0.0.1:4173`.
 
-The studio includes a guided playground, code editor, language guide, resource catalog, and local run history.
+The live playground needs the local service.
 
-The playground shows four pitchers, six batters, and full player profiles.
+It shows `npm run app` when the service is not available.
 
-It also supports four prior pitches, count groups, and batter-side filters.
-
-It saves drafts in the browser. It also supports light, dark, desktop, and mobile layouts.
-
-The demonstration uses 31,104 synthetic pitch records.
-
-Do not use its result as baseball evidence.
-
-Run `npm run demo:record` to create a short browser recording.
-
-## Command line
+## Check the project
 
 ```bash
-npm run dev -- check examples/demo.seam --catalog examples/demo.catalog.yml
-npm run dev -- compile examples/demo.seam --catalog examples/demo.catalog.yml --emit plan
-npm run dev -- compile examples/demo.seam --catalog examples/demo.catalog.yml --emit sql
-npm run dev -- explain examples/demo.seam --catalog examples/demo.catalog.yml
-npm run demo
+npm run check
+npm run test:e2e
 ```
 
-Use `--json` for public machine output.
+## Decision model
 
-Use `--audit-file <path>` for the protected repeatability record.
+The result uses six separate one-pitch outcomes.
 
-The normal output never includes the simulation seed.
+- Ball
+- Called strike
+- Swing and miss
+- Foul
+- Out in play
+- Hit
 
-## What works
+The six chances total 100%.
 
-- A custom indentation lexer
-- A concrete syntax tree parser
-- A typed baseball semantic checker
-- Source ranges and useful corrections
-- A trusted resource catalog
-- Exact remote model version resolution
-- A frozen execution graph and fingerprint
-- Parameterized SQL generation
-- Plate-appearance-safe sequence selection
-- Exact-strata comparison weights
-- More than 70 baseball data fields
-- Pre-pitch feature timing checks
-- Observed, model, and simulated evidence
-- Adaptive automatic simulation
-- Confidence ranges and explicit uncertainty limits
-- Zone maps, examples, and breakdown data
-- CSV and bounded HTTP data access
-- MLflow alias resolution
-- Exact KServe V2 inference
-- OpenAPI comparison and simulation services
-- A CLI and responsive browser studio
+Recommendation mode tests each pitch in the selected pitcher's arsenal.
+
+It tests approved target locations for each pitch.
+
+It returns the best call and two other calls.
+
+The runtime shows the model version and trial count.
+
+It separates simulation error from model uncertainty.
 
 ## Remote resources
 
-The study uses short resource names.
+A catalog maps short names to approved resources.
 
-An administrator-owned catalog maps names to resources.
+Data can come from a team warehouse or an HTTP data service.
 
-A separate connections file stores service locations and token names.
+Models can come from MLflow and KServe services.
 
-The study never contains an address or secret.
+Algorithms can come from approved OpenAPI services.
 
-The runtime supports these remote paths:
+The runtime freezes model versions.
 
-- HTTP JSON data gateways
-- MLflow model aliases
-- KServe V2 model services
-- OpenAPI comparison services
-- OpenAPI simulation services
+It does not train an undeclared replacement model.
 
-The runtime freezes each model alias to an exact version.
+## Demonstration limits
 
-It never trains an undeclared replacement model.
+The included players and pitch records are synthetic.
 
-Direct Flight SQL needs an ADBC sidecar or HTTP gateway.
+The local probability model is illustrative.
 
-The current Node runtime does not claim direct Flight SQL support.
+The result is not real baseball advice.
 
-See [REMOTE_RESOURCES.md](docs/REMOTE_RESOURCES.md).
+Public Statcast shows the delivered pitch.
 
-## Evidence rules
+It does not reliably show the intended target or who made the call.
 
-SeamScript uses four separate labels.
+A production system needs private call and target data.
 
-- An observed rate describes matching records.
-- A model chance is a point prediction.
-- A simulated chance samples model results.
-- A causal effect needs a separate causal design.
-
-The current release does not report causal effects.
-
-Model uncertainty is explicit when the model does not provide it.
-
-Monte Carlo error does not include model or data uncertainty.
-
-## Target users
-
-The first user is a pregame game-plan coordinator.
-
-The next users are a catching coordinator and an in-game pitching coach.
-
-See [TARGET_USERS.md](TARGET_USERS.md) for their decisions and limits.
-
-## Test the project
-
-```bash
-npm run typecheck
-npm test
-npm run test:e2e
-npm run build
-npm run model:evaluate
-```
-
-The test suite covers syntax, planning, execution, remote failures, security, and browser behavior.
-
-## Project documents
-
-- [Final pitch](PITCH.md)
-- [Language specification](LANGUAGE_SPEC.md)
-- [Compiler architecture](docs/ARCHITECTURE.md)
-- [Research findings](docs/RESEARCH_FINDINGS.md)
-- [Data contract](docs/DATA_CONTRACT.md)
-- [Demonstration model card](docs/DEMO_MODEL.md)
-- [Remote resources](docs/REMOTE_RESOURCES.md)
-- [Demonstration script](docs/DEMO_SCRIPT.md)
-- [Devpost text](docs/DEVPOST.md)
+See [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md) and [docs/RESEARCH_FINDINGS.md](docs/RESEARCH_FINDINGS.md).
