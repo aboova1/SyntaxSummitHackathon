@@ -6,13 +6,26 @@
   "bin": {
     "seam": "dist/src/cli.js"
   },
+  "files": [
+    "dist/src",
+    "web",
+    "data/sample-pitches.csv",
+    "examples",
+    "docs",
+    "LANGUAGE_SPEC.md",
+    "PITCH.md",
+    "TARGET_USERS.md",
+    "SECURITY.md"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "check": "npm run typecheck && npm run test",
     "data:generate": "tsx scripts/generate-demo-data.ts",
     "model:evaluate": "tsx scripts/evaluate-demo-model.ts",
     "dev": "tsx src/cli.ts",
-    "demo": "tsx src/cli.ts run examples/demo.seam --catalog examples/demo.catalog.yml",
+    "demo": "tsx src/cli.ts run examples/decision.seam --catalog examples/demo.catalog.yml",
+    "demo:sequence": "tsx src/cli.ts run examples/demo.seam --catalog examples/demo.catalog.yml",
     "demo:record": "tsx scripts/record-demo.ts",
     "app": "tsx src/server.ts",
     "format:check": "prettier --check .",
@@ -20,7 +33,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify": "npm run format:check && npm run check && npm run build && npm run test:e2e"
   },
   "engines": {
     "node": ">=22"

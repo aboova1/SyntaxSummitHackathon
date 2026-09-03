@@ -8,6 +8,7 @@ const root = resolve(new URL("..", import.meta.url).pathname);
 const tsx = resolve(root, "node_modules/tsx/dist/cli.mjs");
 const cli = resolve(root, "src/cli.ts");
 const study = resolve(root, "examples/demo.seam");
+const decisionStudy = resolve(root, "examples/decision.seam");
 const catalog = resolve(root, "examples/demo.catalog.yml");
 const temporary: string[] = [];
 
@@ -32,6 +33,28 @@ describe("command line", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('"status": "complete"');
     expect(result.stdout).not.toContain("seed");
+  });
+
+  it("checks and runs the featured pitch decision", () => {
+    const checked = run("check", decisionStudy, "--catalog", catalog);
+    const compiled = run(
+      "compile",
+      decisionStudy,
+      "--catalog",
+      catalog,
+      "--emit",
+      "plan",
+    );
+    const executed = run("run", decisionStudy, "--catalog", catalog, "--json");
+
+    expect(checked.status).toBe(0);
+    expect(checked.stdout).toContain("is valid");
+    expect(compiled.status).toBe(0);
+    expect(compiled.stdout).toContain("simulate outcomes");
+    expect(executed.status).toBe(0);
+    expect(executed.stdout).toContain('"mode": "pitch decision"');
+    expect(executed.stdout).toContain('"outcome": "hit"');
+    expect(executed.stdout).not.toContain("seed");
   });
 
   it("writes the repeatability seed only to a private audit file", async () => {

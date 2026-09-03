@@ -70,4 +70,27 @@ describe("next-pitch decisions", () => {
       goal: "any strike",
     });
   });
+
+  it("rejects ambiguous questions and unknown fields", async () => {
+    const data = await loadPlaygroundData(dataPath);
+    const source = `study: Invalid decision\nsource: synthetic demo pitches\nsituation:\n  pitcher: Alex Morgan\n  batter: Taylor Kim\n  count: 1-2\n  previous pitch: slider\n  previous location: low and away\n  previous result: foul\n  outs: 1\n  runners: first\n  score: tied\n  weather: clear\nquestion:\n  outcomes for: slider\n  target location: low and away\n  best pitch for: swing and miss\ninclude:\n  - raw seed\n`;
+    const parsed = parseDecisionSource(source, data);
+    const messages = parsed.diagnostics.map((item) => item.message);
+
+    expect(parsed.request).toBeUndefined();
+    expect(messages).toContain("Unknown situation field 'weather'.");
+    expect(messages).toContain("The question must contain only one task.");
+    expect(messages).toContain("Unknown include item 'raw seed'.");
+  });
+
+  it("rejects a pitch outside the selected arsenal", async () => {
+    const data = await loadPlaygroundData(dataPath);
+    const source = `study: Invalid pitch\nsource: synthetic demo pitches\nsituation:\n  pitcher: Alex Morgan\n  batter: Taylor Kim\n  count: 1-2\n  previous pitch: none\n  outs: 1\n  runners: empty\n  score: tied\nquestion:\n  outcomes for: knuckleball\n  target location: low and away\n`;
+    const parsed = parseDecisionSource(source, data);
+
+    expect(parsed.request).toBeUndefined();
+    expect(parsed.diagnostics.map((item) => item.message)).toContain(
+      "The selected pitch is not in this pitcher's arsenal.",
+    );
+  });
 });

@@ -27,44 +27,41 @@ const page = await context.newPage();
 const video = page.video();
 
 try {
-  await page.goto(`http://127.0.0.1:${port}`);
-  const editor = page.getByLabel("SeamScript source");
-  await editor.waitFor({ state: "visible" });
-  await page.waitForFunction(() =>
-    (
-      document.querySelector("#source") as HTMLTextAreaElement | null
-    )?.value.includes("event: swing and miss"),
-  );
-  await page.waitForTimeout(2_500);
+  await page.goto(`http://127.0.0.1:${port}/#playground`);
+  await page
+    .getByRole("heading", { name: "Make the next pitch decision" })
+    .waitFor();
+  await page.getByLabel("Pitcher").selectOption("P100");
+  await page.getByLabel("Batter", { exact: true }).selectOption("B100");
+  await page.getByLabel("Next pitch", { exact: true }).selectOption("slider");
+  await page.getByLabel("Target location").selectOption("low and away");
+  await page.waitForTimeout(2_000);
 
-  const original = await editor.inputValue();
-  await editor.fill(
-    original.replace("event: swing and miss", "result: swing and miss"),
-  );
+  await page.getByRole("button", { name: "Run decision" }).click();
+  await page.getByText("Outcome forecast").waitFor();
+  await page.waitForTimeout(4_000);
+
+  await page.getByRole("tab", { name: "Source" }).click();
+  await page.getByLabel("Generated SeamScript").waitFor();
+  await page.waitForTimeout(4_000);
+
+  await page.getByRole("tab", { name: "Decision" }).click();
+  await page.locator(".task-switch label").nth(1).click();
+  await page.getByLabel("Desired result").selectOption("swing and miss");
+  await page.getByRole("button", { name: "Run decision" }).click();
+  await page.getByText("Recommended call").waitFor();
+  await page.waitForTimeout(4_000);
+
+  await page.getByRole("tab", { name: "Source" }).click();
+  await page.getByRole("button", { name: "Open in Studio" }).click();
+  await page.getByLabel("SeamScript source").waitFor();
+  await page.waitForTimeout(3_000);
   await page.getByRole("button", { name: "Check" }).click();
-  await page.getByText("S202 · semantic").waitFor();
-  await page.waitForTimeout(3_500);
-
-  await editor.fill(original);
-  await page.getByRole("button", { name: "Compile" }).click();
-  await page.locator(".plan-step").first().waitFor();
-  await page.waitForTimeout(3_500);
-
-  await page.getByRole("tab", { name: "SQL" }).click();
-  await page.waitForTimeout(3_500);
-
+  await page.getByText("Check complete · all checks passed").waitFor();
+  await page.waitForTimeout(3_000);
   await page.getByRole("button", { name: "Run study" }).click();
-  await page.getByRole("heading", { name: "Fastball before slider" }).waitFor();
+  await page.getByText("Best call for Swing And Miss").waitFor();
   await page.waitForTimeout(5_000);
-  await page
-    .getByRole("heading", { name: "Primary target zone" })
-    .scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3_500);
-  await page.getByRole("button", { name: "Language guide" }).click();
-  await page
-    .getByRole("heading", { name: "One form. One meaning." })
-    .scrollIntoViewIfNeeded();
-  await page.waitForTimeout(3_500);
 } finally {
   await page.close();
   await context.close();

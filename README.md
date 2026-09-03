@@ -23,6 +23,19 @@ It runs 40,000 local simulation trials for each pitch call.
 
 You can also open [index.html](index.html). It opens the offline page.
 
+## Try the command-line demo
+
+Run the featured study.
+
+```bash
+npm install
+npm run demo
+```
+
+The command checks the language and runs 40,000 trials.
+
+It prints six outcome chances and the model limits.
+
 ## Language example
 
 ```seam
@@ -89,9 +102,10 @@ It shows `npm run app` when the service is not available.
 ## Check the project
 
 ```bash
-npm run check
-npm run test:e2e
+npm run verify
 ```
+
+This command checks format, types, tests, the build, and browser flows.
 
 ## Decision model
 

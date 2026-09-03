@@ -12,6 +12,8 @@ import { executePlan } from "./runtime/execute.js";
 import { toPublicResult } from "./runtime/public-result.js";
 import { loadPlaygroundData } from "./playground-data.js";
 import {
+  buildPitchDecisionPlan,
+  isPitchDecisionSource,
   parseDecisionSource,
   runPitchDecision,
   type PitchDecisionRequest,
@@ -168,44 +170,11 @@ export const createSeamServer = ({ projectRoot }: WebServerOptions) => {
           return;
         }
 
-        if (
-          /^situation:\s*$/mu.test(body.source) &&
-          /^question:\s*$/mu.test(body.source)
-        ) {
+        if (isPitchDecisionSource(body.source)) {
           const data = await loadPlaygroundData(dataPath);
           const parsed = parseDecisionSource(body.source, data);
           const plan = parsed.request
-            ? {
-                nodes: [
-                  {
-                    kind: "read situation",
-                    description: "Read known pre-pitch facts.",
-                  },
-                  {
-                    kind: "build pitch calls",
-                    description:
-                      parsed.request.question.kind === "predict"
-                        ? "Build the selected pitch call."
-                        : "Build calls from the pitcher’s arsenal.",
-                  },
-                  {
-                    kind: "predict outcomes",
-                    description:
-                      "Estimate one complete outcome distribution for each call.",
-                  },
-                  {
-                    kind: "simulate outcomes",
-                    description: "Run 40,000 automatic trials for each call.",
-                  },
-                  {
-                    kind: "rank calls",
-                    description:
-                      parsed.request.question.kind === "recommend"
-                        ? "Rank calls by the selected goal."
-                        : "Keep the selected call.",
-                  },
-                ],
-              }
+            ? buildPitchDecisionPlan(parsed.request)
             : undefined;
           const result =
             body.action === "run" && parsed.request

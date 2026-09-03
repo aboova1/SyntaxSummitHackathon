@@ -8,6 +8,10 @@ SeamScript
 
 A readable language for checked next-pitch prediction and recommendation.
 
+## One-line pitch
+
+State the game. Ask one question. Get a checked next-pitch decision.
+
 ## Inspiration
 
 Baseball teams have detailed pitch data and approved models.
@@ -51,11 +55,21 @@ This formula stays readable and easy to remember.
 
 We built the language, checked planner, runtime, and browser studio in TypeScript.
 
+The compiler rejects unknown fields, mixed questions, and invalid pitch calls.
+
+The planner shows each decision step before the runtime starts.
+
+The runtime returns a complete outcome distribution for every tested call.
+
 The runtime can connect to local or remote data and approved models.
 
 It can freeze MLflow model versions and call KServe services.
 
 It does not train an undeclared replacement model.
+
+The included direct decision demo uses a local synthetic data file.
+
+Its local outcome model is illustrative.
 
 ## Research choices
 
@@ -81,6 +95,24 @@ Recommendations state one goal and stay inside the pitcher's arsenal.
 - A self-contained offline playground
 - Desktop and mobile layouts
 - Unit, server, and browser tests
+
+## Why it matters
+
+A coach can read the study without knowing Python or SQL.
+
+An analyst can check the same study before it reaches the dugout.
+
+A team can keep trusted data and models inside approved systems.
+
+SeamScript gives both users one shared decision record.
+
+## What is next
+
+We will validate the language with coaches and baseball analysts.
+
+We will connect private call, target, and execution data.
+
+We will evaluate calibrated production models across players and seasons.
 
 ## Demonstration notice
 

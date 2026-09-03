@@ -98,6 +98,51 @@ export interface DecisionParseResult {
   }[];
 }
 
+export interface PitchDecisionPlan {
+  readonly study: string;
+  readonly nodes: readonly {
+    readonly kind: string;
+    readonly description: string;
+  }[];
+}
+
+export const isPitchDecisionSource = (source: string): boolean =>
+  /^situation:\s*$/mu.test(source) && /^question:\s*$/mu.test(source);
+
+export const buildPitchDecisionPlan = (
+  request: PitchDecisionRequest,
+): PitchDecisionPlan => ({
+  study: request.study,
+  nodes: [
+    {
+      kind: "read situation",
+      description: "Read known pre-pitch facts.",
+    },
+    {
+      kind: "build pitch calls",
+      description:
+        request.question.kind === "predict"
+          ? "Build the selected pitch call."
+          : "Build calls from the pitcher's arsenal.",
+    },
+    {
+      kind: "predict outcomes",
+      description: "Estimate one complete outcome distribution for each call.",
+    },
+    {
+      kind: "simulate outcomes",
+      description: "Run 40,000 automatic trials for each call.",
+    },
+    {
+      kind: "rank calls",
+      description:
+        request.question.kind === "recommend"
+          ? "Rank calls by the selected goal."
+          : "Keep the selected call.",
+    },
+  ],
+});
+
 const BASE: Readonly<Record<string, readonly number[]>> = {
   "four-seam fastball": [0.3, 0.2, 0.11, 0.17, 0.13, 0.09],
   sinker: [0.3, 0.17, 0.1, 0.16, 0.18, 0.09],
@@ -410,20 +455,43 @@ const valueMap = (
   return values;
 };
 
+const childKeys = (source: string, block: string): readonly string[] => {
+  const keys: string[] = [];
+  let active = false;
+  for (const line of source.split(/\r?\n/u)) {
+    const top = /^(\S[^:]*):\s*(.*)$/u.exec(line);
+    if (top) {
+      active = top[1] === block;
+      continue;
+    }
+    if (!active) continue;
+    const child = /^\s{2}([^:]+):\s*(.*)$/u.exec(line);
+    if (child?.[1]) keys.push(child[1].trim());
+  }
+  return keys;
+};
+
+const listItems = (source: string, block: string): readonly string[] => {
+  const items: string[] = [];
+  let active = false;
+  for (const line of source.split(/\r?\n/u)) {
+    const top = /^(\S[^:]*):\s*(.*)$/u.exec(line);
+    if (top) {
+      active = top[1] === block;
+      continue;
+    }
+    if (!active) continue;
+    const item = /^\s{2}-\s+(.+)$/u.exec(line);
+    if (item?.[1]) items.push(item[1].trim());
+  }
+  return items;
+};
+
 export const parseDecisionSource = (
   source: string,
   data: PlaygroundData,
 ): DecisionParseResult => {
   const diagnostics: DecisionParseResult["diagnostics"][number][] = [];
-  const top = Object.fromEntries(
-    source
-      .split(/\r?\n/u)
-      .map((line) => /^(\S[^:]*):\s*(.+)$/u.exec(line))
-      .filter((match): match is RegExpExecArray => Boolean(match))
-      .map((match) => [match[1]!.trim(), match[2]!.trim()]),
-  );
-  const situation = valueMap(source, "situation");
-  const question = valueMap(source, "question");
   const fail = (message: string, hint?: string): void => {
     diagnostics.push({
       code: "S260",
@@ -433,6 +501,73 @@ export const parseDecisionSource = (
       ...(hint ? { hint } : {}),
     });
   };
+  const topEntries = source
+    .split(/\r?\n/u)
+    .map((line) => /^(\S[^:]*):\s*(.*)$/u.exec(line))
+    .filter((match): match is RegExpExecArray => Boolean(match))
+    .map((match) => [match[1]!.trim(), match[2]!.trim()] as const);
+  const top = Object.fromEntries(topEntries);
+  const allowedBlocks = new Set([
+    "study",
+    "source",
+    "situation",
+    "question",
+    "using",
+    "include",
+  ]);
+  for (const [name] of topEntries) {
+    if (!allowedBlocks.has(name)) fail(`Unknown block '${name}'.`);
+  }
+  for (const required of ["study", "source", "situation", "question"]) {
+    if (!topEntries.some(([name]) => name === required))
+      fail(`The study needs the '${required}' block.`);
+  }
+  if (topEntries.some(([name]) => name === "study") && !top.study)
+    fail("The study needs a name.");
+  if (topEntries.some(([name]) => name === "source") && !top.source)
+    fail("The source needs a catalog name.");
+  const seenBlocks = new Set<string>();
+  for (const [name] of topEntries) {
+    if (seenBlocks.has(name))
+      fail(`The '${name}' block occurs more than once.`);
+    seenBlocks.add(name);
+  }
+
+  const situation = valueMap(source, "situation");
+  const question = valueMap(source, "question");
+  const using = valueMap(source, "using");
+  const allowedSituation = new Set([
+    "pitcher",
+    "batter",
+    "count",
+    "previous pitch",
+    "previous location",
+    "previous result",
+    "outs",
+    "runners",
+    "score",
+  ]);
+  for (const key of childKeys(source, "situation")) {
+    if (!allowedSituation.has(key)) fail(`Unknown situation field '${key}'.`);
+  }
+  const allowedQuestion = new Set([
+    "outcomes for",
+    "target location",
+    "best pitch for",
+  ]);
+  for (const key of childKeys(source, "question")) {
+    if (!allowedQuestion.has(key)) fail(`Unknown question field '${key}'.`);
+  }
+  const allowedUsing = new Set(["model", "simulation"]);
+  for (const key of childKeys(source, "using")) {
+    if (!allowedUsing.has(key)) fail(`Unknown using field '${key}'.`);
+  }
+  if (using.simulation && using.simulation !== "automatic")
+    fail("Simulation must be automatic.");
+  const allowedInclude = new Set(["outcome chances", "uncertainty"]);
+  for (const item of listItems(source, "include")) {
+    if (!allowedInclude.has(item)) fail(`Unknown include item '${item}'.`);
+  }
 
   const pitcher = findPlayer(data.pitchers, situation.pitcher ?? "");
   const batter = findPlayer(data.batters, situation.batter ?? "");
@@ -460,20 +595,49 @@ export const parseDecisionSource = (
     !TARGET_LOCATIONS.includes(location as TargetLocation)
   )
     fail("Select a valid previous location.");
+  const previousResults = [
+    "ball",
+    "called strike",
+    "swing and miss",
+    "foul",
+    "in play",
+  ];
+  if (
+    situation["previous pitch"] !== "none" &&
+    !previousResults.includes(situation["previous result"] ?? "")
+  )
+    fail("Select a valid previous result.");
   const outs = Number(situation.outs);
   if (![0, 1, 2].includes(outs)) fail("Outs must be 0, 1, or 2.");
+  if (
+    ![
+      "empty",
+      "first",
+      "second",
+      "third",
+      "first and second",
+      "loaded",
+    ].includes(situation.runners ?? "")
+  )
+    fail("Select a valid runner state.");
+  if (!["ahead", "tied", "behind"].includes(situation.score ?? ""))
+    fail("Score must be ahead, tied, or behind.");
 
   let parsedQuestion: DecisionQuestion | undefined;
-  if (question["outcomes for"]) {
+  const predict = Boolean(question["outcomes for"]);
+  const recommend = Boolean(question["best pitch for"]);
+  if (predict && recommend) {
+    fail("The question must contain only one task.");
+  } else if (predict) {
     const targetLocation = question["target location"] as TargetLocation;
     if (!TARGET_LOCATIONS.includes(targetLocation))
       fail("Select a valid target location.");
-    parsedQuestion = {
-      kind: "predict",
-      pitch: question["outcomes for"],
-      location: targetLocation,
-    };
-  } else if (question["best pitch for"]) {
+    const pitch = question["outcomes for"]!;
+    if (pitcher && !pitcher.pitchMix.some((item) => item.pitch === pitch))
+      fail("The selected pitch is not in this pitcher's arsenal.");
+    if (TARGET_LOCATIONS.includes(targetLocation))
+      parsedQuestion = { kind: "predict", pitch, location: targetLocation };
+  } else if (recommend) {
     const goal = question["best pitch for"] as RecommendationGoal;
     if (!RECOMMENDATION_GOALS.includes(goal))
       fail("Select a valid recommendation goal.");
@@ -489,7 +653,7 @@ export const parseDecisionSource = (
     return { diagnostics };
   return {
     request: {
-      study: top.study ?? "Next pitch decision",
+      study: top.study || "Next pitch decision",
       situation: {
         pitcher: pitcher.id,
         batter: batter.id,

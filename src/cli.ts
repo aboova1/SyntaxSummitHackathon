@@ -3,14 +3,26 @@
 import { chmod, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { Command } from "commander";
+import { parseCatalog } from "./catalog/load.js";
 import { compileFrontEnd } from "./compiler/compile.js";
 import { compileProject } from "./compiler/project.js";
 import {
+  error,
   formatDiagnostic,
   hasErrors,
   type Diagnostic,
 } from "./compiler/diagnostic.js";
 import { loadConnections } from "./connections/load.js";
+import {
+  buildPitchDecisionPlan,
+  isPitchDecisionSource,
+  parseDecisionSource,
+  runPitchDecision,
+  type PitchDecisionPlan,
+  type PitchDecisionRequest,
+  type PitchDecisionResult,
+} from "./decision.js";
+import { loadPlaygroundData, type PlaygroundData } from "./playground-data.js";
 import { executePlan } from "./runtime/execute.js";
 import { prepareExecution } from "./runtime/prepare.js";
 import { toPublicResult } from "./runtime/public-result.js";
@@ -120,6 +132,96 @@ const printResult = (result: StudyResult): void => {
   }
 };
 
+const printDecisionResult = (result: PitchDecisionResult): void => {
+  process.stdout.write(`\n${result.study}\n`);
+  if (result.question.kind === "predict") {
+    process.stdout.write(
+      `Call: ${result.selected.pitch} at ${result.selected.location}\n`,
+    );
+  } else {
+    process.stdout.write(`Goal: ${result.question.goal}\n`);
+    process.stdout.write(
+      `Best call: ${result.selected.pitch} at ${result.selected.location}\n`,
+    );
+    process.stdout.write("\nRanked calls:\n");
+    for (const [index, call] of (result.recommendations ?? []).entries()) {
+      process.stdout.write(
+        `${index + 1}. ${call.pitch} at ${call.location}: ${percent(call.goalChance)}\n`,
+      );
+    }
+  }
+  process.stdout.write("\nOutcome chances:\n");
+  for (const item of result.selected.outcomes)
+    process.stdout.write(`- ${item.outcome}: ${percent(item.chance)}\n`);
+  process.stdout.write(`\nTrials: ${result.trials.toLocaleString()}\n`);
+  process.stdout.write(
+    `Model: ${result.model.name} ${result.model.version} (${result.model.status})\n`,
+  );
+  process.stdout.write("\nLimits:\n");
+  for (const notice of result.notices) process.stdout.write(`- ${notice}\n`);
+};
+
+interface CompiledPitchDecision {
+  readonly data?: PlaygroundData;
+  readonly request?: PitchDecisionRequest;
+  readonly plan?: PitchDecisionPlan;
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+const compilePitchDecisionFromFiles = async (
+  studyPath: string,
+  catalogPath: string,
+  studySource?: string,
+): Promise<CompiledPitchDecision> => {
+  const [source, catalogSource] = await Promise.all([
+    studySource ?? readText(studyPath),
+    readText(catalogPath),
+  ]);
+  const loadedCatalog = parseCatalog(catalogSource);
+  if (!loadedCatalog.catalog) return { diagnostics: loadedCatalog.diagnostics };
+
+  const sourceName = /^source:\s*(.+)$/mu.exec(source)?.[1]?.trim();
+  const resource = sourceName
+    ? loadedCatalog.catalog.data[sourceName]
+    : undefined;
+  if (!sourceName || !resource) {
+    return {
+      diagnostics: [
+        error("resolve", "S260", "The decision source is not in the catalog.", {
+          hint: "Select a named catalog data source.",
+        }),
+      ],
+    };
+  }
+  if (resource.connector !== "csv") {
+    return {
+      diagnostics: [
+        error(
+          "resolve",
+          "S261",
+          "The local decision command needs a CSV demonstration source.",
+          { hint: "Use the browser studio for configured remote resources." },
+        ),
+      ],
+    };
+  }
+
+  const data = await loadPlaygroundData(
+    resolve(dirname(resolve(catalogPath)), resource.object),
+  );
+  const parsed = parseDecisionSource(source, data);
+  return {
+    data,
+    ...(parsed.request
+      ? {
+          request: parsed.request,
+          plan: buildPitchDecisionPlan(parsed.request),
+        }
+      : {}),
+    diagnostics: parsed.diagnostics,
+  };
+};
+
 const compileFromFiles = async (studyPath: string, catalogPath: string) => {
   const [studySource, catalogSource] = await Promise.all([
     readText(studyPath),
@@ -131,7 +233,7 @@ const compileFromFiles = async (studyPath: string, catalogPath: string) => {
 program
   .name("seam")
   .description("Compile and run SeamScript baseball studies.")
-  .version("0.3.0");
+  .version("0.4.0");
 
 program
   .command("check")
@@ -140,6 +242,31 @@ program
   .option("-c, --catalog <path>", "Path to a catalog file.")
   .action(async (studyPath: string, options: CatalogOption) => {
     const studySource = await readText(studyPath);
+    if (isPitchDecisionSource(studySource)) {
+      if (!options.catalog) {
+        const diagnostic = error(
+          "resolve",
+          "S260",
+          "A pitch decision needs a resource catalog.",
+          { hint: "Add --catalog <path>." },
+        );
+        printDiagnostics([diagnostic], studyPath);
+        process.exitCode = 1;
+        return;
+      }
+      const result = await compilePitchDecisionFromFiles(
+        studyPath,
+        options.catalog,
+        studySource,
+      );
+      printDiagnostics(result.diagnostics, studyPath);
+      if (hasErrors(result.diagnostics)) {
+        process.exitCode = 1;
+        return;
+      }
+      process.stdout.write(`${studyPath} is valid.\n`);
+      return;
+    }
     const result = options.catalog
       ? compileProject(studySource, await readText(options.catalog))
       : compileFrontEnd(studySource);
@@ -162,7 +289,38 @@ program
       studyPath: string,
       options: CatalogOption & { readonly emit: string },
     ) => {
-      const result = await compileFromFiles(studyPath, requireCatalog(options));
+      const catalogPath = requireCatalog(options);
+      const studySource = await readText(studyPath);
+      if (isPitchDecisionSource(studySource)) {
+        const result = await compilePitchDecisionFromFiles(
+          studyPath,
+          catalogPath,
+          studySource,
+        );
+        printDiagnostics(result.diagnostics, studyPath);
+        if (hasErrors(result.diagnostics) || !result.request || !result.plan) {
+          process.exitCode = 1;
+          return;
+        }
+        if (options.emit === "ast") {
+          process.stdout.write(`${JSON.stringify(result.request, null, 2)}\n`);
+        } else if (options.emit === "plan") {
+          process.stdout.write(`${JSON.stringify(result.plan, null, 2)}\n`);
+        } else if (options.emit === "tokens") {
+          process.stdout.write(
+            `${JSON.stringify(compileFrontEnd(studySource).tokens, null, 2)}\n`,
+          );
+        } else if (options.emit === "sql") {
+          process.stdout.write(
+            "-- Pitch decisions call an approved outcome model.\n\nParameters: []\n",
+          );
+        } else {
+          process.stderr.write(`Unknown output form '${options.emit}'.\n`);
+          process.exitCode = 1;
+        }
+        return;
+      }
+      const result = await compileFromFiles(studyPath, catalogPath);
       printDiagnostics(result.diagnostics, studyPath);
       if (hasErrors(result.diagnostics) || !result.plan) {
         process.exitCode = 1;
@@ -196,7 +354,25 @@ program
   .argument("<study>", "Path to a .seam file.")
   .requiredOption("-c, --catalog <path>", "Path to a catalog file.")
   .action(async (studyPath: string, options: CatalogOption) => {
-    const result = await compileFromFiles(studyPath, requireCatalog(options));
+    const catalogPath = requireCatalog(options);
+    const studySource = await readText(studyPath);
+    if (isPitchDecisionSource(studySource)) {
+      const result = await compilePitchDecisionFromFiles(
+        studyPath,
+        catalogPath,
+        studySource,
+      );
+      printDiagnostics(result.diagnostics, studyPath);
+      if (hasErrors(result.diagnostics) || !result.plan) {
+        process.exitCode = 1;
+        return;
+      }
+      process.stdout.write(`${result.plan.study}\n\n`);
+      for (const [index, node] of result.plan.nodes.entries())
+        process.stdout.write(`${index + 1}. ${node.description}\n`);
+      return;
+    }
+    const result = await compileFromFiles(studyPath, catalogPath);
     printDiagnostics(result.diagnostics, studyPath);
     if (hasErrors(result.diagnostics) || !result.plan) {
       process.exitCode = 1;
@@ -238,6 +414,36 @@ program
       },
     ) => {
       const catalogPath = requireCatalog(options);
+      const studySource = await readText(studyPath);
+      if (isPitchDecisionSource(studySource)) {
+        const compiled = await compilePitchDecisionFromFiles(
+          studyPath,
+          catalogPath,
+          studySource,
+        );
+        printDiagnostics(compiled.diagnostics, studyPath);
+        if (
+          hasErrors(compiled.diagnostics) ||
+          !compiled.request ||
+          !compiled.data
+        ) {
+          process.exitCode = 1;
+          return;
+        }
+        const result = runPitchDecision(compiled.request, compiled.data);
+        if (options.auditFile) {
+          const auditPath = resolve(options.auditFile);
+          await writeFile(auditPath, `${JSON.stringify(result, null, 2)}\n`, {
+            encoding: "utf8",
+            mode: 0o600,
+          });
+          await chmod(auditPath, 0o600);
+        }
+        if (options.json)
+          process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        else printDecisionResult(result);
+        return;
+      }
       const compiled = await compileFromFiles(studyPath, catalogPath);
       printDiagnostics(compiled.diagnostics, studyPath);
       if (hasErrors(compiled.diagnostics) || !compiled.plan) {
